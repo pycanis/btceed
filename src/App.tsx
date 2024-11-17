@@ -2,9 +2,30 @@ import { sha256 } from "@noble/hashes/sha256";
 import { hex } from "@scure/base";
 import { HDKey } from "@scure/bip32";
 import { initEccLib, payments } from "bitcoinjs-lib";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { isXOnlyPoint, xOnlyPointAddTweak } from "tiny-secp256k1";
 import "./App.css";
+
+type ScriptType = "p2wpkh" | "p2tr" | "p2pkh";
+
+type Transaction = {
+  txid: string;
+  blockhash: string;
+  // todo
+};
+
+// type HistoryItem = {
+//   height: number;
+//   tx_hash: string;
+// };
+
+type Address = {
+  address: string;
+  scriptHash: string;
+  isChange: boolean;
+  index: number;
+  transactions: Transaction[];
+};
 
 initEccLib({
   isXOnlyPoint,
@@ -15,17 +36,12 @@ const xpub = "";
 
 const hdKey = HDKey.fromExtendedKey(xpub);
 
-const GAP = 20;
+const scriptType: ScriptType = "p2wpkh";
 
-type ScriptType = "p2wpkh" | "p2tr" | "p2pkh";
+const GAP_LIMIT = 20;
 
-type Address = {
-  address: string;
-  scriptHash: string;
-  isChange: boolean;
-  index: number;
-  transactions: Transaction[];
-};
+const GET_HISTORY = "blockchain.scripthash.get_history";
+const GET_TRANSACTION = "blockchain.transaction.get";
 
 const getPayment = (publicKey: Uint8Array, scriptType: ScriptType) => {
   // todo: add all script types
@@ -43,18 +59,18 @@ const getPayment = (publicKey: Uint8Array, scriptType: ScriptType) => {
   }
 };
 
-const getScriptHash = (output: Uint8Array) =>
-  hex.encode(sha256(output).reverse());
+const getScriptHash = (output: Uint8Array) => hex.encode(sha256(output).reverse());
 
 const getAddresses = (
   hdKey: HDKey,
   scriptType: ScriptType,
+  isChange: boolean,
   startIndex: number,
-  isChange: boolean
+  limit = GAP_LIMIT
 ) => {
   const addresses: Address[] = [];
 
-  for (let i = startIndex; i < startIndex + GAP; i++) {
+  for (let i = startIndex; i < startIndex + limit; i++) {
     const { publicKey } = hdKey.deriveChild(isChange ? 1 : 0).deriveChild(i);
 
     const { address, output } = getPayment(publicKey!, scriptType);
@@ -71,46 +87,55 @@ const getAddresses = (
   return addresses;
 };
 
-const GET_HISTORY = "blockchain.scripthash.get_history";
-const GET_TRANSACTION = "blockchain.transaction.get";
-
 const socket = new WebSocket("ws://192.168.4.11:50003");
-
-type Transaction = {
-  txid: string;
-  blockhash: string;
-  // todo
-};
-
-// type HistoryItem = {
-//   height: number;
-//   tx_hash: string;
-// };
 
 function App() {
   const [addresses, setAddresses] = useState<Address[]>([]);
-  //  const [_txIdsToPull, setTxIdsToPull] = useState<string[]>([]);
+  const [lastActiveIndexes, setLastActiveIndexes] = useState({ receive: 0, change: 0 });
+  // const [_txIdsToPull, setTxIdsToPull] = useState<string[]>([]);
+
+  const getAddressesHistory = useCallback((addresses: Address[]) => {
+    setAddresses((prev) => [...prev, ...addresses]);
+
+    for (const address of addresses) {
+      socket.send(
+        JSON.stringify({
+          id: `${GET_HISTORY}-${address.scriptHash}-${address.index}-${address.isChange}`,
+          method: GET_HISTORY,
+          params: [address.scriptHash],
+        })
+      );
+    }
+  }, []);
+
+  const getAdditionalAddresses = useCallback(
+    (isChange: boolean) => {
+      const typeAddresses = addresses.filter((address) => address.isChange === isChange);
+
+      const lastActiveIndex = isChange ? lastActiveIndexes.change : lastActiveIndexes.receive;
+
+      const limitDiff = typeAddresses.length - GAP_LIMIT;
+
+      if (limitDiff < 0) {
+        return;
+      }
+
+      const missingAddressesCount = lastActiveIndex + 1 - limitDiff;
+
+      if (missingAddressesCount <= 0) {
+        return;
+      }
+
+      getAddressesHistory(getAddresses(hdKey, scriptType, isChange, typeAddresses.length, missingAddressesCount));
+    },
+    [addresses, getAddressesHistory, lastActiveIndexes]
+  );
 
   useEffect(() => {
-    const initialAddresses = [
-      ...getAddresses(hdKey, "p2wpkh", 0, false),
-      ...getAddresses(hdKey, "p2wpkh", 0, true),
-    ];
-
-    setAddresses(initialAddresses);
-
     socket.onopen = () => {
       console.log("Connected to the Fulcrum server");
 
-      for (const address of initialAddresses) {
-        socket.send(
-          JSON.stringify({
-            id: `${GET_HISTORY}-${address.scriptHash}`,
-            method: GET_HISTORY,
-            params: [address.scriptHash],
-          })
-        );
-      }
+      getAddressesHistory([...getAddresses(hdKey, scriptType, false, 0), ...getAddresses(hdKey, scriptType, true, 0)]);
     };
 
     socket.onmessage = (event) => {
@@ -124,7 +149,7 @@ function App() {
 
       switch (method) {
         case GET_HISTORY: {
-          const scriptHash = params[0];
+          const [scriptHash, indexParam, isChangeParam] = params;
 
           for (const historyItem of data.result) {
             socket.send(
@@ -136,10 +161,17 @@ function App() {
             );
           }
 
-          // setTxIdsToPull((prev) => [
-          //   ...prev,
-          //   ...data.result.map((r: HistoryItem) => r.tx_hash),
-          // ]);
+          if (data.result.length > 0) {
+            const isChange = isChangeParam === "true";
+            const index = Number(indexParam);
+
+            setLastActiveIndexes((prev) => ({
+              receive: !isChange && index > prev.receive ? index : prev.receive,
+              change: isChange && index > prev.change ? index : prev.change,
+            }));
+          }
+
+          // setTxIdsToPull((prev) => [...prev, ...data.result.map((r: HistoryItem) => r.tx_hash)]);
 
           break;
         }
@@ -151,9 +183,7 @@ function App() {
             prevAddresses.map((address) => ({
               ...address,
               transactions:
-                address.scriptHash === scriptHash
-                  ? [...address.transactions, data.result]
-                  : address.transactions,
+                address.scriptHash === scriptHash ? [...address.transactions, data.result] : address.transactions,
             }))
           );
 
@@ -173,7 +203,12 @@ function App() {
     socket.onclose = () => {
       console.log("Connection closed");
     };
-  }, []);
+  }, [getAddressesHistory]);
+
+  useEffect(() => {
+    getAdditionalAddresses(false);
+    getAdditionalAddresses(true);
+  }, [getAdditionalAddresses]);
 
   console.log(addresses);
 
