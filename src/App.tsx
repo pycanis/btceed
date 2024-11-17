@@ -1,31 +1,10 @@
-import { sha256 } from "@noble/hashes/sha256";
-import { hex } from "@scure/base";
-import { HDKey } from "@scure/bip32";
-import { initEccLib, payments } from "bitcoinjs-lib";
+import { initEccLib } from "bitcoinjs-lib";
 import { useCallback, useEffect, useState } from "react";
 import { isXOnlyPoint, xOnlyPointAddTweak } from "tiny-secp256k1";
+import { AddressService } from "./AddressService";
 import "./App.css";
-
-type ScriptType = "p2wpkh" | "p2tr" | "p2pkh";
-
-type Transaction = {
-  txid: string;
-  blockhash: string;
-  // todo
-};
-
-// type HistoryItem = {
-//   height: number;
-//   tx_hash: string;
-// };
-
-type Address = {
-  address: string;
-  scriptHash: string;
-  isChange: boolean;
-  index: number;
-  transactions: Transaction[];
-};
+import { GAP_LIMIT, GET_HISTORY, GET_TRANSACTION } from "./constants";
+import { Address, ScriptType } from "./types";
 
 initEccLib({
   isXOnlyPoint,
@@ -34,58 +13,9 @@ initEccLib({
 
 const xpub = "";
 
-const hdKey = HDKey.fromExtendedKey(xpub);
-
 const scriptType: ScriptType = "p2wpkh";
 
-const GAP_LIMIT = 20;
-
-const GET_HISTORY = "blockchain.scripthash.get_history";
-const GET_TRANSACTION = "blockchain.transaction.get";
-
-const getPayment = (publicKey: Uint8Array, scriptType: ScriptType) => {
-  // todo: add all script types
-  switch (scriptType) {
-    case "p2wpkh":
-      return payments.p2wpkh({
-        pubkey: publicKey,
-      });
-    case "p2tr":
-      return payments.p2tr({
-        internalPubkey: publicKey.slice(1),
-      });
-    default:
-      throw new Error("Unknown script type");
-  }
-};
-
-const getScriptHash = (output: Uint8Array) => hex.encode(sha256(output).reverse());
-
-const getAddresses = (
-  hdKey: HDKey,
-  scriptType: ScriptType,
-  isChange: boolean,
-  startIndex: number,
-  limit = GAP_LIMIT
-) => {
-  const addresses: Address[] = [];
-
-  for (let i = startIndex; i < startIndex + limit; i++) {
-    const { publicKey } = hdKey.deriveChild(isChange ? 1 : 0).deriveChild(i);
-
-    const { address, output } = getPayment(publicKey!, scriptType);
-
-    addresses.push({
-      address: address!,
-      scriptHash: getScriptHash(output!),
-      isChange,
-      index: i,
-      transactions: [],
-    });
-  }
-
-  return addresses;
-};
+const addressService = new AddressService(xpub, scriptType);
 
 const socket = new WebSocket("ws://192.168.4.11:50003");
 
@@ -126,7 +56,7 @@ function App() {
         return;
       }
 
-      getAddressesHistory(getAddresses(hdKey, scriptType, isChange, typeAddresses.length, missingAddressesCount));
+      getAddressesHistory(addressService.deriveAddressRange(isChange, typeAddresses.length, missingAddressesCount));
     },
     [addresses, getAddressesHistory, lastActiveIndexes]
   );
@@ -135,7 +65,7 @@ function App() {
     socket.onopen = () => {
       console.log("Connected to the Fulcrum server");
 
-      getAddressesHistory([...getAddresses(hdKey, scriptType, false, 0), ...getAddresses(hdKey, scriptType, true, 0)]);
+      getAddressesHistory([...addressService.deriveAddressRange(false), ...addressService.deriveAddressRange(true)]);
     };
 
     socket.onmessage = (event) => {
