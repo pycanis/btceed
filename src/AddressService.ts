@@ -1,9 +1,15 @@
 import { sha256 } from "@noble/hashes/sha256";
 import { hex } from "@scure/base";
 import { HDKey } from "@scure/bip32";
-import { payments } from "bitcoinjs-lib";
+import { initEccLib, payments } from "bitcoinjs-lib";
+import { isXOnlyPoint, xOnlyPointAddTweak } from "tiny-secp256k1";
 import { GAP_LIMIT } from "./constants";
 import { Address, ScriptType } from "./types";
+
+initEccLib({
+  isXOnlyPoint,
+  xOnlyPointAddTweak,
+});
 
 export class AddressService {
   private hdKey: HDKey;
