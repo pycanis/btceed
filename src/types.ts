@@ -1,3 +1,6 @@
+import { Node } from "@xyflow/react";
+
+// todo: all types
 export type ScriptType = "p2wpkh" | "p2tr" | "p2pkh";
 
 export type Vin = {
@@ -31,7 +34,7 @@ export type Transaction = {
   vout: Vout[];
 };
 
-export type Address = {
+export type AddressEntry = {
   address: string;
   scriptHash: string;
   isChange: boolean;
@@ -43,3 +46,19 @@ export type HistoryItem = {
   tx_hash: string;
   height: number;
 };
+
+export type XpubNode = Node<
+  {
+    xpub: string;
+    isVertical: boolean;
+  },
+  "xpubNode"
+>;
+
+export type AddressNode = Node<
+  {
+    address: string;
+    isVertical: boolean;
+  },
+  "addressNode"
+>;

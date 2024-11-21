@@ -1,5 +1,9 @@
-import { Tree } from "./Tree";
+import { Graph } from "./containers/Graph";
 
 export const App = () => {
-  return <Tree />;
+  return (
+    <div className="w-screen h-screen">
+      <Graph />
+    </div>
+  );
 };

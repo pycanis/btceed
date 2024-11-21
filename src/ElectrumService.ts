@@ -1,6 +1,6 @@
 type EventName = "close" | "error" | "message" | "open";
 
-export class ElectrumService {
+class ElectrumService {
   private socket!: WebSocket;
   private wasConnected = false;
   private reconnectAttempts = 0;
@@ -91,3 +91,5 @@ export class ElectrumService {
     this.socket.send(JSON.stringify(data));
   }
 }
+
+export const electrumService = new ElectrumService("ws://192.168.4.11:50003");

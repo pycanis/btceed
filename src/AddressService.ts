@@ -4,7 +4,7 @@ import { HDKey } from "@scure/bip32";
 import { initEccLib, payments } from "bitcoinjs-lib";
 import { isXOnlyPoint, xOnlyPointAddTweak } from "tiny-secp256k1";
 import { GAP_LIMIT } from "./constants";
-import { Address, ScriptType } from "./types";
+import { AddressEntry, ScriptType } from "./types";
 
 initEccLib({
   isXOnlyPoint,
@@ -40,7 +40,7 @@ export class AddressService {
     return hex.encode(sha256(output).reverse());
   }
 
-  private deriveAddress(index: number, isChange: boolean): Address {
+  private deriveAddress(index: number, isChange: boolean): AddressEntry {
     const { publicKey } = this.hdKey.deriveChild(isChange ? 1 : 0).deriveChild(index);
 
     if (!publicKey) {
@@ -62,7 +62,7 @@ export class AddressService {
     };
   }
 
-  public deriveAddressRange(isChange: boolean, startIndex = 0, limit = GAP_LIMIT): Address[] {
+  public deriveAddressRange(isChange: boolean, startIndex = 0, limit = GAP_LIMIT): AddressEntry[] {
     return Array.from({ length: limit }, (_, i) => this.deriveAddress(startIndex + i, isChange));
   }
 }
