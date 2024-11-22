@@ -39,7 +39,7 @@ export type AddressEntry = {
   scriptHash: string;
   isChange: boolean;
   index: number;
-  transactions: Transaction[];
+  transactionIds: string[];
 };
 
 export type HistoryItem = {

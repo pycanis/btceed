@@ -22,13 +22,15 @@ export const Graph = () => {
       nodesFocusable={false}
       edgesFocusable={false}
       edgesReconnectable={false}
+      fitView
     >
-      <ReactFlowControls setDirection={setDirection} nodesAndEdges={nodesAndEdges} />
+      <ReactFlowControls direction={direction} setDirection={setDirection} nodesAndEdges={nodesAndEdges} />
     </ReactFlow>
   );
 };
 
 type Props = {
+  direction: Direction;
   setDirection: Dispatch<SetStateAction<Direction>>;
   nodesAndEdges: {
     nodes: Node[];
@@ -36,7 +38,7 @@ type Props = {
   };
 };
 
-const ReactFlowControls = ({ setDirection, nodesAndEdges }: Props) => {
+const ReactFlowControls = ({ direction, setDirection }: Props) => {
   const { fitView } = useReactFlow();
 
   useEffect(() => {
@@ -44,7 +46,7 @@ const ReactFlowControls = ({ setDirection, nodesAndEdges }: Props) => {
     setTimeout(() => {
       fitView();
     }, 0);
-  }, [fitView, nodesAndEdges]);
+  }, [fitView, direction]);
 
   return (
     <>

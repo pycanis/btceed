@@ -6,11 +6,21 @@ import { AddressEntry, HistoryItem, ScriptType, Transaction } from "../../types"
 
 const LAST_ACTIVE_INDEXES_DEFAULT = { receive: 0, change: 0 };
 
-export const useAddressEntries = (xpub: string, scriptType: ScriptType) => {
-  const [addressEntries, setAddressEntries] = useState<Record<string, AddressEntry>>({});
-  const [lastActiveIndexes, setLastActiveIndexes] = useState(LAST_ACTIVE_INDEXES_DEFAULT);
-
+export const useAddressEntriesAndTransactions = (xpub: string, scriptType: ScriptType) => {
   const addressService = useMemo(() => new AddressService(xpub, scriptType), [xpub, scriptType]);
+
+  const initialAddressEntries = useMemo(
+    () => [...addressService.deriveAddressRange(false), ...addressService.deriveAddressRange(true)],
+    [addressService]
+  );
+
+  const [addressesToLoad, setAddressesToLoad] = useState<string[]>(
+    initialAddressEntries.map((addressEntry) => addressEntry.address)
+  );
+
+  const [addressEntries, setAddressEntries] = useState<Record<string, AddressEntry>>({});
+  const [transactions, setTransactions] = useState<Record<string, Transaction>>({});
+  const [lastActiveIndexes, setLastActiveIndexes] = useState(LAST_ACTIVE_INDEXES_DEFAULT);
 
   const getAddressEntriesHistory = useCallback((addressEntries: AddressEntry[]) => {
     const addressEntry = addressEntries.reduce((acc, address) => {
@@ -30,14 +40,9 @@ export const useAddressEntries = (xpub: string, scriptType: ScriptType) => {
     }
   }, []);
 
-  const handleElectrumConnect = useCallback(
-    () =>
-      getAddressEntriesHistory([
-        ...addressService.deriveAddressRange(false),
-        ...addressService.deriveAddressRange(true),
-      ]),
-    [addressService, getAddressEntriesHistory]
-  );
+  const handleElectrumConnect = useCallback(() => {
+    getAddressEntriesHistory(initialAddressEntries);
+  }, [initialAddressEntries, getAddressEntriesHistory]);
 
   const handleElectrumMessage = useCallback((data?: unknown) => {
     const { id, result } = data as { id: string; result: unknown };
@@ -54,13 +59,19 @@ export const useAddressEntries = (xpub: string, scriptType: ScriptType) => {
 
         const historyItems = result as HistoryItem[];
 
-        for (const historyItem of historyItems) {
-          electrumService.sendMessage({
-            id: `${GET_TRANSACTION}-${scriptHash}`,
-            method: GET_TRANSACTION,
-            params: [historyItem.tx_hash, true],
-          });
-        }
+        setAddressEntries((prev) => {
+          const addressEntryToUpdate = Object.values(prev).find((a) => a.scriptHash === scriptHash)!;
+
+          setAddressesToLoad((prev) => prev.filter((address) => address !== addressEntryToUpdate.address));
+
+          return {
+            ...prev,
+            [addressEntryToUpdate.address]: {
+              ...addressEntryToUpdate,
+              transactionIds: historyItems.map((item) => item.tx_hash),
+            },
+          };
+        });
 
         if (historyItems.length > 0) {
           const isChange = isChangeParam === "true";
@@ -76,19 +87,16 @@ export const useAddressEntries = (xpub: string, scriptType: ScriptType) => {
       }
 
       case GET_TRANSACTION: {
-        const scriptHash = params[0];
-
         const transaction = result as Transaction;
 
-        setAddressEntries((prevAddresses) => {
-          const addressToUpdate = Object.values(prevAddresses).find((a) => a.scriptHash === scriptHash)!;
+        setTransactions((prev) => {
+          if (prev[transaction.txid]) {
+            console.log(`tx ${transaction.txid} was already loaded`);
+          }
 
           return {
-            ...prevAddresses,
-            [addressToUpdate.address]: {
-              ...addressToUpdate,
-              transactions: [...addressToUpdate.transactions, transaction],
-            },
+            ...prev,
+            [transaction.txid]: transaction,
           };
         });
 
@@ -103,13 +111,13 @@ export const useAddressEntries = (xpub: string, scriptType: ScriptType) => {
 
   const getAdditionalAddressEntries = useCallback(
     (isChange: boolean) => {
-      const typeAddresses = Object.keys(addressEntries).filter(
+      const addressEntriesByType = Object.keys(addressEntries).filter(
         (addressEntry) => addressEntries[addressEntry].isChange === isChange
       );
 
       const lastActiveIndex = isChange ? lastActiveIndexes.change : lastActiveIndexes.receive;
 
-      const limitDiff = typeAddresses.length - GAP_LIMIT;
+      const limitDiff = addressEntriesByType.length - GAP_LIMIT;
 
       if (limitDiff < 0) {
         return;
@@ -121,9 +129,15 @@ export const useAddressEntries = (xpub: string, scriptType: ScriptType) => {
         return;
       }
 
-      getAddressEntriesHistory(
-        addressService.deriveAddressRange(isChange, typeAddresses.length, missingAddressesCount)
+      const derivedAddressEntries = addressService.deriveAddressRange(
+        isChange,
+        addressEntriesByType.length,
+        missingAddressesCount
       );
+
+      setAddressesToLoad(derivedAddressEntries.map((addressEntry) => addressEntry.address));
+
+      getAddressEntriesHistory(derivedAddressEntries);
     },
     [addressEntries, getAddressEntriesHistory, lastActiveIndexes, addressService]
   );
@@ -143,5 +157,37 @@ export const useAddressEntries = (xpub: string, scriptType: ScriptType) => {
     setLastActiveIndexes(LAST_ACTIVE_INDEXES_DEFAULT);
   }, [xpub, scriptType]);
 
-  return useMemo(() => addressEntries, [addressEntries]);
+  const addressesLoaded = useMemo(() => addressesToLoad.length === 0, [addressesToLoad]);
+
+  useEffect(() => {
+    if (!addressesLoaded) {
+      return;
+    }
+
+    const transactionIdsToLoad = new Set(
+      Object.values(addressEntries).flatMap((addressEntry) => addressEntry.transactionIds)
+    );
+
+    for (const transactionId of transactionIdsToLoad) {
+      electrumService.sendMessage({
+        id: GET_TRANSACTION,
+        method: GET_TRANSACTION,
+        params: [transactionId, true],
+      });
+    }
+  }, [addressesLoaded, addressEntries]);
+
+  const transactionsLoaded = useMemo(
+    () =>
+      addressesLoaded &&
+      Object.values(addressEntries)
+        .flatMap((addressEntry) => addressEntry.transactionIds)
+        .every((transactionId) => !!transactions[transactionId]),
+    [addressesLoaded, addressEntries, transactions]
+  );
+
+  return useMemo(
+    () => ({ addressEntries, transactions, isLoading: !addressesLoaded || !transactionsLoaded }),
+    [addressEntries, transactions, addressesLoaded, transactionsLoaded]
+  );
 };

@@ -58,7 +58,7 @@ export class AddressService {
       scriptHash: this.getScriptHash(output),
       isChange,
       index,
-      transactions: [],
+      transactionIds: [],
     };
   }
 

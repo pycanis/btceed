@@ -1,6 +1,6 @@
 import dagre from "@dagrejs/dagre";
-import { Edge, Node } from "@xyflow/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Edge } from "@xyflow/react";
+import { useCallback, useMemo } from "react";
 import { NODE_HEIGHT, NODE_WIDTH } from "../../constants";
 import {
   AddressEntry,
@@ -10,16 +10,14 @@ import {
   ScriptType,
   XpubNode as XpubNodeType,
 } from "../../types";
-import { useAddressEntries } from "./useAddressEntries";
+import { useAddressEntriesAndTransactions } from "./useAddressEntriesAndTransactions";
 
 const xpub = "";
 
 const scriptType: ScriptType = "p2wpkh";
 
 export const useNodesAndEdges = (direction: Direction) => {
-  const [nodesAndEdges, setNodesAndEdges] = useState<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
-
-  const addressEntries = useAddressEntries(xpub, scriptType);
+  const { addressEntries, transactions, isLoading } = useAddressEntriesAndTransactions(xpub, scriptType);
 
   const dagreGraph = useMemo(() => new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({})), []);
 
@@ -65,19 +63,19 @@ export const useNodesAndEdges = (direction: Direction) => {
       const nextLevelAddressEntries: AddressEntry[] = [];
 
       for (const addressEntry of currentLevelAddressEntries) {
-        const spendingTransactions = addressEntry.transactions.filter((t) =>
-          t.vin.some((vin) =>
-            addressEntry.transactions.some((tx) =>
-              tx.vout.some(
+        const spendingTransactionIds = addressEntry.transactionIds.filter((transactionId) =>
+          transactions[transactionId].vin.some((vin) =>
+            addressEntry.transactionIds.some((txId) =>
+              transactions[txId].vout.some(
                 (vout) =>
-                  tx.txid !== t.txid && vout.n === vin.vout && vout.scriptPubKey.address === addressEntry.address
+                  txId !== transactionId && vout.n === vin.vout && vout.scriptPubKey.address === addressEntry.address
               )
             )
           )
         );
 
-        for (const transaction of spendingTransactions) {
-          for (const vout of transaction.vout) {
+        for (const transactionId of spendingTransactionIds) {
+          for (const vout of transactions[transactionId].vout) {
             const address = vout.scriptPubKey.address;
 
             // handle case when tx output goes back to address it's coming from
@@ -114,12 +112,14 @@ export const useNodesAndEdges = (direction: Direction) => {
 
       populateAddressNodesAndEdges(nodes, edges, nextLevelAddressEntries);
     },
-    [addressEntries, direction]
+    [addressEntries, transactions, direction]
   );
 
   const getXpubAddressesNodesAndEdges = useCallback(
     (nodes: PositionlessNode[], edges: Edge[], xpubNode: Omit<XpubNodeType, "position">) => {
-      const xpubAddressEntries = Object.values(addressEntries).filter((a) => !a.isChange && a.transactions.length > 0);
+      const xpubAddressEntries = Object.values(addressEntries).filter(
+        (a) => !a.isChange && a.transactionIds.length > 0
+      );
 
       for (const addressEntry of xpubAddressEntries) {
         const node: Omit<IAddressNode, "position"> = {
@@ -161,9 +161,5 @@ export const useNodesAndEdges = (direction: Direction) => {
     return getLayoutedNodesAndEdges(nodes, edges, direction);
   }, [getLayoutedNodesAndEdges, getXpubAddressesNodesAndEdges, populateAddressNodesAndEdges, direction]);
 
-  useEffect(() => {
-    setNodesAndEdges(getNodesAndEdges());
-  }, [getNodesAndEdges]);
-
-  return useMemo(() => nodesAndEdges, [nodesAndEdges]);
+  return useMemo(() => (isLoading ? { nodes: [], edges: [] } : getNodesAndEdges()), [getNodesAndEdges, isLoading]);
 };
