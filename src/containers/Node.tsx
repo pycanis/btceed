@@ -1,6 +1,7 @@
 import { Handle, NodeProps, Position } from "@xyflow/react";
 import { useMemo } from "react";
 import { AddressNodeType, Direction, AddressNode as IAddressNode, XpubNode as XpubNodeType } from "../types";
+import { getBothSideSubstring } from "../utils/strings";
 
 const nodeWrapperStyles = "w-24 h-6 rounded-lg text-xs flex justify-center items-center";
 
@@ -17,7 +18,7 @@ const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
 
   return (
     <div className={`${nodeWrapperStyles} bg-green-400 h-6`}>
-      <p>{`${data.xpub.substring(0, 6)}..${data.xpub.substring(data.xpub.length - 6)}`}</p>
+      <p>{getBothSideSubstring(data.xpub)}</p>
       <Handle type="source" position={handleDirectionMap[data.direction]} id={id} />
     </div>
   );
@@ -53,7 +54,7 @@ const AddressNode = ({ id, data }: NodeProps<IAddressNode>) => {
 
   return (
     <div className={`${nodeWrapperStyles} ${addressNodeTypeMap[data.type]}`}>
-      <p>{`${data.address.substring(0, 6)}..${data.address.substring(data.address.length - 6)}`}</p>
+      <p>{getBothSideSubstring(data.address)}</p>
 
       {data.type !== "externalAddress" && (
         <Handle type="source" position={handleDirectionMap.source[data.direction]} id={id} />
