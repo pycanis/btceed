@@ -89,16 +89,10 @@ export const useAddressEntriesAndTransactions = (xpub: string, scriptType: Scrip
       case GET_TRANSACTION: {
         const transaction = result as Transaction;
 
-        setTransactions((prev) => {
-          if (prev[transaction.txid]) {
-            console.log(`tx ${transaction.txid} was already loaded`);
-          }
-
-          return {
-            ...prev,
-            [transaction.txid]: transaction,
-          };
-        });
+        setTransactions((prev) => ({
+          ...prev,
+          [transaction.txid]: transaction,
+        }));
 
         break;
       }
