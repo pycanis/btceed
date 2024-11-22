@@ -47,10 +47,12 @@ export type HistoryItem = {
   height: number;
 };
 
+export type PositionlessNode = Omit<Node, "position">;
+
 export type XpubNode = Node<
   {
     xpub: string;
-    isVertical: boolean;
+    direction: Direction;
   },
   "xpubNode"
 >;
@@ -58,7 +60,12 @@ export type XpubNode = Node<
 export type AddressNode = Node<
   {
     address: string;
-    isVertical: boolean;
+    direction: Direction;
+    type: AddressNodeType;
   },
   "addressNode"
 >;
+
+export type AddressNodeType = "xpubAddress" | "changeAddress" | "externalAddress";
+
+export type Direction = "TB" | "LR" | "RL" | "BT";

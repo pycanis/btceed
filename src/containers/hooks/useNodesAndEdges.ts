@@ -1,20 +1,22 @@
 import dagre from "@dagrejs/dagre";
 import { Edge, Node } from "@xyflow/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AddressEntry, AddressNode as AddressNodeType, ScriptType, XpubNode as XpubNodeType } from "../../types";
+import { NODE_HEIGHT, NODE_WIDTH } from "../../constants";
+import {
+  AddressEntry,
+  Direction,
+  AddressNode as IAddressNode,
+  PositionlessNode,
+  ScriptType,
+  XpubNode as XpubNodeType,
+} from "../../types";
 import { useAddressEntries } from "./useAddressEntries";
 
 const xpub = "";
 
 const scriptType: ScriptType = "p2wpkh";
 
-type UseNodesAndEdgesParams = {
-  nodeWidth: number;
-  nodeHeight: number;
-  isVertical: boolean;
-};
-
-export const useNodesAndEdges = ({ nodeWidth, nodeHeight, isVertical }: UseNodesAndEdgesParams) => {
+export const useNodesAndEdges = (direction: Direction) => {
   const [nodesAndEdges, setNodesAndEdges] = useState<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
 
   const addressEntries = useAddressEntries(xpub, scriptType);
@@ -22,11 +24,11 @@ export const useNodesAndEdges = ({ nodeWidth, nodeHeight, isVertical }: UseNodes
   const dagreGraph = useMemo(() => new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({})), []);
 
   const getLayoutedNodesAndEdges = useCallback(
-    (nodes: Omit<Node, "position">[], edges: Edge[], isVertical: boolean) => {
-      dagreGraph.setGraph({ rankdir: isVertical ? "TB" : "LR" });
+    (nodes: PositionlessNode[], edges: Edge[], direction: Direction) => {
+      dagreGraph.setGraph({ rankdir: direction });
 
       nodes.forEach((node) => {
-        dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+        dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
       });
 
       edges.forEach((edge) => {
@@ -41,8 +43,8 @@ export const useNodesAndEdges = ({ nodeWidth, nodeHeight, isVertical }: UseNodes
         const newNode = {
           ...node,
           position: {
-            x: nodeWithPosition.x - nodeWidth / 2,
-            y: nodeWithPosition.y - nodeHeight / 2,
+            x: nodeWithPosition.x - NODE_WIDTH / 2,
+            y: nodeWithPosition.y - NODE_HEIGHT / 2,
           },
         };
 
@@ -51,11 +53,11 @@ export const useNodesAndEdges = ({ nodeWidth, nodeHeight, isVertical }: UseNodes
 
       return { nodes: newNodes, edges };
     },
-    [dagreGraph, nodeWidth, nodeHeight]
+    [dagreGraph]
   );
 
   const populateAddressNodesAndEdges = useCallback(
-    (nodes: Omit<Node, "position">[], edges: Edge[], currentLevelAddressEntries: AddressEntry[]) => {
+    (nodes: PositionlessNode[], edges: Edge[], currentLevelAddressEntries: AddressEntry[]) => {
       if (currentLevelAddressEntries.length === 0) {
         return;
       }
@@ -85,9 +87,13 @@ export const useNodesAndEdges = ({ nodeWidth, nodeHeight, isVertical }: UseNodes
 
             const nextLevelAddressEntry = addressEntries[address];
 
-            const node: Omit<AddressNodeType, "position"> = {
+            const node: Omit<IAddressNode, "position"> = {
               id: address,
-              data: { ...(nextLevelAddressEntry || { address, transactions: [] }), isVertical },
+              data: {
+                ...(nextLevelAddressEntry || { address, transactions: [] }),
+                direction,
+                type: nextLevelAddressEntry ? "changeAddress" : "externalAddress",
+              },
               type: "addressNode",
             };
 
@@ -108,20 +114,17 @@ export const useNodesAndEdges = ({ nodeWidth, nodeHeight, isVertical }: UseNodes
 
       populateAddressNodesAndEdges(nodes, edges, nextLevelAddressEntries);
     },
-    [addressEntries, isVertical]
+    [addressEntries, direction]
   );
 
   const getXpubAddressesNodesAndEdges = useCallback(
-    (xpubNode: Omit<XpubNodeType, "position">) => {
-      const nodes: Omit<Node, "position">[] = [];
-      const edges: Edge[] = [];
-
+    (nodes: PositionlessNode[], edges: Edge[], xpubNode: Omit<XpubNodeType, "position">) => {
       const xpubAddressEntries = Object.values(addressEntries).filter((a) => !a.isChange && a.transactions.length > 0);
 
       for (const addressEntry of xpubAddressEntries) {
-        const node: Omit<AddressNodeType, "position"> = {
+        const node: Omit<IAddressNode, "position"> = {
           id: addressEntry.address,
-          data: { ...addressEntry, isVertical },
+          data: { ...addressEntry, direction, type: "xpubAddress" },
           type: "addressNode",
         };
 
@@ -134,39 +137,32 @@ export const useNodesAndEdges = ({ nodeWidth, nodeHeight, isVertical }: UseNodes
         });
       }
 
-      return { xpubAddressEntries, nodes, edges };
+      return xpubAddressEntries;
     },
-    [addressEntries, isVertical]
+    [addressEntries, direction]
   );
 
   const getNodesAndEdges = useCallback(() => {
-    const nodes: Omit<Node, "position">[] = [];
+    const nodes: PositionlessNode[] = [];
     const edges: Edge[] = [];
 
     const xpubNode: Omit<XpubNodeType, "position"> = {
       id: xpub,
-      data: { xpub, isVertical },
+      data: { xpub, direction },
       type: "xpubNode",
     };
 
     nodes.push(xpubNode);
 
-    const {
-      xpubAddressEntries,
-      nodes: xpubAddressesNodes,
-      edges: xpubAddressesEdges,
-    } = getXpubAddressesNodesAndEdges(xpubNode);
-
-    nodes.push(...xpubAddressesNodes);
-    edges.push(...xpubAddressesEdges);
+    const xpubAddressEntries = getXpubAddressesNodesAndEdges(nodes, edges, xpubNode);
 
     populateAddressNodesAndEdges(nodes, edges, xpubAddressEntries);
 
-    setNodesAndEdges(getLayoutedNodesAndEdges(nodes, edges, isVertical));
-  }, [getLayoutedNodesAndEdges, getXpubAddressesNodesAndEdges, populateAddressNodesAndEdges, isVertical]);
+    return getLayoutedNodesAndEdges(nodes, edges, direction);
+  }, [getLayoutedNodesAndEdges, getXpubAddressesNodesAndEdges, populateAddressNodesAndEdges, direction]);
 
   useEffect(() => {
-    getNodesAndEdges();
+    setNodesAndEdges(getNodesAndEdges());
   }, [getNodesAndEdges]);
 
   return useMemo(() => nodesAndEdges, [nodesAndEdges]);

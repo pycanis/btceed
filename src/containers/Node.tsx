@@ -1,23 +1,65 @@
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { AddressNode as AddressNodeType, XpubNode as XpubNodeType } from "../types";
+import { useMemo } from "react";
+import { AddressNodeType, Direction, AddressNode as IAddressNode, XpubNode as XpubNodeType } from "../types";
+
+const nodeWrapperStyles = "w-24 h-6 rounded-lg text-xs flex justify-center items-center";
 
 const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
+  const handleDirectionMap = useMemo<Record<Direction, Position>>(
+    () => ({
+      TB: Position.Bottom,
+      BT: Position.Top,
+      LR: Position.Right,
+      RL: Position.Left,
+    }),
+    []
+  );
+
   return (
-    <div className="w-36 h-10 bg-green-400">
-      {data.xpub}
-      <Handle type="source" position={data.isVertical ? Position.Bottom : Position.Right} id={id} />
+    <div className={`${nodeWrapperStyles} bg-green-400 h-6`}>
+      <p>{`${data.xpub.substring(0, 6)}..${data.xpub.substring(data.xpub.length - 6)}`}</p>
+      <Handle type="source" position={handleDirectionMap[data.direction]} id={id} />
     </div>
   );
 };
 
-const AddressNode = ({ id, data }: NodeProps<AddressNodeType>) => {
+const AddressNode = ({ id, data }: NodeProps<IAddressNode>) => {
+  const handleDirectionMap = useMemo<{ source: Record<Direction, Position>; target: Record<Direction, Position> }>(
+    () => ({
+      source: {
+        TB: Position.Bottom,
+        BT: Position.Top,
+        LR: Position.Right,
+        RL: Position.Left,
+      },
+      target: {
+        TB: Position.Top,
+        BT: Position.Bottom,
+        LR: Position.Left,
+        RL: Position.Right,
+      },
+    }),
+    []
+  );
+
+  const addressNodeTypeMap = useMemo<Record<AddressNodeType, string>>(
+    () => ({
+      changeAddress: "bg-red-400",
+      externalAddress: "bg-gray-400",
+      xpubAddress: "bg-yellow-400",
+    }),
+    []
+  );
+
   return (
-    <div className="w-36 h-10 bg-red-400">
-      {data.address}
+    <div className={`${nodeWrapperStyles} ${addressNodeTypeMap[data.type]}`}>
+      <p>{`${data.address.substring(0, 6)}..${data.address.substring(data.address.length - 6)}`}</p>
 
-      <Handle type="source" position={data.isVertical ? Position.Bottom : Position.Right} id={id} />
+      {data.type !== "externalAddress" && (
+        <Handle type="source" position={handleDirectionMap.source[data.direction]} id={id} />
+      )}
 
-      <Handle type="target" position={data.isVertical ? Position.Top : Position.Left} id={id} />
+      <Handle type="target" position={handleDirectionMap.target[data.direction]} id={id} />
     </div>
   );
 };
