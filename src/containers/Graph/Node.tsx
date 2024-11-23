@@ -1,7 +1,7 @@
 import { Handle, NodeProps, Position } from "@xyflow/react";
 import { useMemo } from "react";
-import { AddressNodeType, Direction, AddressNode as IAddressNode, XpubNode as XpubNodeType } from "../types";
-import { getBothSideSubstring } from "../utils/strings";
+import { AddressNodeType, Direction, AddressNode as IAddressNode, XpubNode as XpubNodeType } from "../../types";
+import { getBothSideSubstring } from "../../utils/strings";
 
 const nodeWrapperStyles = "w-24 h-6 rounded-lg text-xs flex justify-center items-center";
 
@@ -56,7 +56,7 @@ const AddressNode = ({ id, data }: NodeProps<IAddressNode>) => {
     <div className={`${nodeWrapperStyles} ${addressNodeTypeMap[data.type]}`}>
       <p>{getBothSideSubstring(data.address)}</p>
 
-      {data.type !== "externalAddress" && (
+      {data.spendingTransactionLength > 0 && (
         <Handle type="source" position={handleDirectionMap.source[data.direction]} id={id} />
       )}
 

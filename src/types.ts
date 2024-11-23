@@ -40,6 +40,7 @@ export type AddressEntry = {
   isChange: boolean;
   index: number;
   transactionIds: string[];
+  xpub: string;
 };
 
 export type HistoryItem = {
@@ -62,6 +63,7 @@ export type AddressNode = Node<
     address: string;
     direction: Direction;
     type: AddressNodeType;
+    spendingTransactionLength: number;
   },
   "addressNode"
 >;
