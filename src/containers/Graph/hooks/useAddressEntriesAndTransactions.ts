@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import useWebSocket, { Options } from "react-use-websocket";
 import { GAP_LIMIT, GET_HISTORY, GET_TRANSACTION } from "../../../constants";
 import { useElectrumContext } from "../../../contexts/ElectrumContext";
@@ -7,6 +7,110 @@ import { AddressEntry, HistoryItem, Transaction } from "../../../types";
 import { useAddressService } from "./useAddressService";
 
 type XpubLastActiveIndexes = Record<string, { receive: number; change: number }>;
+
+type State = {
+  addressesToLoad: string[];
+  addressEntries: Record<string, AddressEntry>;
+  transactions: Record<string, Transaction>;
+  xpubLastActiveIndexes: XpubLastActiveIndexes;
+};
+
+type GetHistoryAction = {
+  type: "getHistory";
+  payload: {
+    scriptHash: string;
+    historyItems: HistoryItem[];
+    isChange: boolean;
+    index: number;
+  };
+};
+
+type GetTransactionAction = {
+  type: "getTransaction";
+  payload: { transaction: Transaction };
+};
+
+type GetAdditionalAddressEntriesAction = {
+  type: "getAdditionalAddressEntries";
+  payload: { additionalAddressEntries: AddressEntry[] };
+};
+
+type Action = GetHistoryAction | GetTransactionAction | GetAdditionalAddressEntriesAction;
+
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case "getHistory": {
+      const { scriptHash, historyItems, isChange, index } = action.payload;
+
+      const addressEntryToUpdate = Object.values(state.addressEntries).find((a) => a.scriptHash === scriptHash)!;
+
+      const addressesToLoad = state.addressesToLoad.filter((address) => address !== addressEntryToUpdate.address);
+
+      const addressEntries = {
+        ...state.addressEntries,
+        [addressEntryToUpdate.address]: {
+          ...addressEntryToUpdate,
+          transactionIds: historyItems.map((item) => item.tx_hash),
+        },
+      };
+
+      let xpubLastActiveIndexes = state.xpubLastActiveIndexes;
+
+      if (historyItems.length > 0) {
+        const indexesToUpdate = xpubLastActiveIndexes[addressEntryToUpdate.xpub];
+
+        xpubLastActiveIndexes = {
+          ...xpubLastActiveIndexes,
+          [addressEntryToUpdate.xpub]: {
+            receive: !isChange && index > indexesToUpdate.receive ? index : indexesToUpdate.receive,
+            change: isChange && index > indexesToUpdate.change ? index : indexesToUpdate.change,
+          },
+        };
+      }
+
+      return {
+        ...state,
+        addressesToLoad,
+        addressEntries,
+        xpubLastActiveIndexes,
+      };
+    }
+
+    case "getTransaction": {
+      const { transaction } = action.payload;
+
+      const transactions = {
+        ...state.transactions,
+        [transaction.txid]: transaction,
+      };
+
+      return {
+        ...state,
+        transactions,
+      };
+    }
+
+    case "getAdditionalAddressEntries": {
+      const { additionalAddressEntries } = action.payload;
+
+      const addressEntries = additionalAddressEntries.reduce((acc, address) => {
+        acc[address.address] = address;
+
+        return acc;
+      }, state.addressEntries);
+
+      const addressesToLoad = [
+        ...state.addressesToLoad,
+        ...additionalAddressEntries.map((addressEntry) => addressEntry.address),
+      ];
+
+      return { ...state, addressEntries, addressesToLoad };
+    }
+
+    default:
+      throw new Error("Unknown action.");
+  }
+};
 
 export const useAddressEntriesAndTransactions = () => {
   const { electrumUrl } = useElectrumContext();
@@ -28,16 +132,25 @@ export const useAddressEntriesAndTransactions = () => {
     [wallets]
   );
 
-  const [addressesToLoad, setAddressesToLoad] = useState<string[]>(
-    initialAddressEntries.map((addressEntry) => addressEntry.address)
+  const initialState: State = useMemo(
+    () => ({
+      addressesToLoad: initialAddressEntries.map((addressEntry) => addressEntry.address),
+      addressEntries: initialAddressEntries.reduce((acc, addressEntry) => {
+        acc[addressEntry.address] = addressEntry;
+
+        return acc;
+      }, {} as Record<string, AddressEntry>),
+      xpubLastActiveIndexes: initialXpubLastActiveIndexes,
+      transactions: {},
+    }),
+    [initialAddressEntries, initialXpubLastActiveIndexes]
   );
 
-  const [addressEntries, setAddressEntries] = useState<Record<string, AddressEntry>>({});
-  const [transactions, setTransactions] = useState<Record<string, Transaction>>({});
-  const [xpubLastActiveIndexes, setXpubLastActiveIndexes] = useState(initialXpubLastActiveIndexes);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const [transactionsLoadTriggered, setTransactionsLoadTriggered] = useState(false);
 
   const handleElectrumMessage = useCallback((event: WebSocketEventMap["message"]) => {
-    const { id, result } = event.data as { id: string; result: unknown };
+    const { id, result } = JSON.parse(event.data) as { id: string; result: unknown };
 
     if (!id) {
       return;
@@ -51,35 +164,14 @@ export const useAddressEntriesAndTransactions = () => {
 
         const historyItems = result as HistoryItem[];
 
-        setAddressEntries((prev) => {
-          const addressEntryToUpdate = Object.values(prev).find((a) => a.scriptHash === scriptHash)!;
-
-          setAddressesToLoad((prev) => prev.filter((address) => address !== addressEntryToUpdate.address));
-
-          if (historyItems.length > 0) {
-            const isChange = isChangeParam === "true";
-            const index = Number(indexParam);
-
-            setXpubLastActiveIndexes((prevIndexes) => {
-              const indexesToUpdate = prevIndexes[addressEntryToUpdate.xpub];
-
-              return {
-                ...prevIndexes,
-                [addressEntryToUpdate.xpub]: {
-                  receive: !isChange && index > indexesToUpdate.receive ? index : indexesToUpdate.receive,
-                  change: isChange && index > indexesToUpdate.change ? index : indexesToUpdate.change,
-                },
-              };
-            });
-          }
-
-          return {
-            ...prev,
-            [addressEntryToUpdate.address]: {
-              ...addressEntryToUpdate,
-              transactionIds: historyItems.map((item) => item.tx_hash),
-            },
-          };
+        dispatch({
+          type: "getHistory",
+          payload: {
+            scriptHash,
+            historyItems,
+            isChange: isChangeParam === "true",
+            index: Number(indexParam),
+          },
         });
 
         break;
@@ -88,62 +180,52 @@ export const useAddressEntriesAndTransactions = () => {
       case GET_TRANSACTION: {
         const transaction = result as Transaction;
 
-        setTransactions((prev) => ({
-          ...prev,
-          [transaction.txid]: transaction,
-        }));
+        dispatch({ type: "getTransaction", payload: { transaction } });
 
         break;
       }
 
       default: {
-        console.log("Unknown message.");
+        console.error("Unknown message.");
       }
     }
   }, []);
 
   const electrumWsOptions = useMemo<Options>(
     () => ({
-      //  share: true,
-      //  shouldReconnect: () => true,
+      share: true,
+      shouldReconnect: () => true,
+      filter: () => false,
       onMessage: handleElectrumMessage,
     }),
     [handleElectrumMessage]
   );
 
-  const electrumWs = useWebSocket(electrumUrl, electrumWsOptions);
+  const { sendJsonMessage } = useWebSocket(electrumUrl, electrumWsOptions);
 
   const getAddressEntriesHistory = useCallback(
     (addressEntries: AddressEntry[]) => {
-      const addressEntry = addressEntries.reduce((acc, address) => {
-        acc[address.address] = address;
-
-        return acc;
-      }, {} as Record<string, AddressEntry>);
-
-      setAddressEntries((prev) => ({ ...prev, ...addressEntry }));
-
       for (const addressEntry of addressEntries) {
-        electrumWs.sendJsonMessage({
+        sendJsonMessage({
           id: `${GET_HISTORY}-${addressEntry.scriptHash}-${addressEntry.index}-${addressEntry.isChange}`,
           method: GET_HISTORY,
           params: [addressEntry.scriptHash],
         });
       }
     },
-    [electrumWs]
+    [sendJsonMessage]
   );
 
   const getAdditionalAddressEntries = useCallback(
     (isChange: boolean) => {
       for (const wallet of wallets) {
         const xpub = wallet.hdKey.publicExtendedKey;
-        const addressEntriesByType = Object.keys(addressEntries).filter(
-          (addressEntry) =>
-            addressEntries[addressEntry].xpub === xpub && addressEntries[addressEntry].isChange === isChange
+
+        const addressEntriesByType = Object.values(state.addressEntries).filter(
+          (addressEntry) => addressEntry.xpub === xpub && addressEntry.isChange === isChange
         );
 
-        const xpubLastActiveIndex = xpubLastActiveIndexes[xpub];
+        const xpubLastActiveIndex = state.xpubLastActiveIndexes[xpub];
 
         const lastActiveIndex = isChange ? xpubLastActiveIndex.change : xpubLastActiveIndex.receive;
 
@@ -166,12 +248,12 @@ export const useAddressEntriesAndTransactions = () => {
           missingAddressesCount
         );
 
-        setAddressesToLoad((prev) => [...prev, ...derivedAddressEntries.map((addressEntry) => addressEntry.address)]);
+        dispatch({ type: "getAdditionalAddressEntries", payload: { additionalAddressEntries: derivedAddressEntries } });
 
         getAddressEntriesHistory(derivedAddressEntries);
       }
     },
-    [addressEntries, getAddressEntriesHistory, xpubLastActiveIndexes, deriveAddressRange, wallets]
+    [state, deriveAddressRange, getAddressEntriesHistory, wallets]
   );
 
   useEffect(() => {
@@ -183,37 +265,45 @@ export const useAddressEntriesAndTransactions = () => {
     getAdditionalAddressEntries(true);
   }, [getAdditionalAddressEntries]);
 
-  const addressesLoaded = useMemo(() => addressesToLoad.length === 0, [addressesToLoad]);
+  const addressesLoaded = useMemo(() => state.addressesToLoad.length === 0, [state]);
 
   useEffect(() => {
-    if (!addressesLoaded) {
+    if (!addressesLoaded || transactionsLoadTriggered) {
       return;
     }
 
+    setTransactionsLoadTriggered(true);
+
     const transactionIdsToLoad = new Set(
-      Object.values(addressEntries).flatMap((addressEntry) => addressEntry.transactionIds)
+      Object.values(state.addressEntries)
+        .flatMap((addressEntry) => addressEntry.transactionIds)
+        .filter((transactionId) => !state.transactions[transactionId])
     );
 
     for (const transactionId of transactionIdsToLoad) {
-      electrumWs.sendJsonMessage({
+      sendJsonMessage({
         id: GET_TRANSACTION,
         method: GET_TRANSACTION,
         params: [transactionId, true],
       });
     }
-  }, [addressesLoaded, addressEntries, electrumWs]);
+  }, [sendJsonMessage, addressesLoaded, state, transactionsLoadTriggered]);
 
   const transactionsLoaded = useMemo(
     () =>
       addressesLoaded &&
-      Object.values(addressEntries)
+      Object.values(state.addressEntries)
         .flatMap((addressEntry) => addressEntry.transactionIds)
-        .every((transactionId) => !!transactions[transactionId]),
-    [addressesLoaded, addressEntries, transactions]
+        .every((transactionId) => !!state.transactions[transactionId]),
+    [addressesLoaded, state]
   );
 
   return useMemo(
-    () => ({ addressEntries, transactions, isLoading: !addressesLoaded || !transactionsLoaded }),
-    [addressEntries, transactions, addressesLoaded, transactionsLoaded]
+    () => ({
+      addressEntries: state.addressEntries,
+      transactions: state.transactions,
+      isLoading: !addressesLoaded || !transactionsLoaded,
+    }),
+    [state, addressesLoaded, transactionsLoaded]
   );
 };

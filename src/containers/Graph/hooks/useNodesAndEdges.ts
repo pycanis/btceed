@@ -53,7 +53,8 @@ export const useNodesAndEdges = (direction: Direction) => {
       edges: Edge[],
       currentLevelAddressEntries: AddressEntry[],
       addressEntries: Record<string, AddressEntry>,
-      transactions: Record<string, Transaction>
+      transactions: Record<string, Transaction>,
+      adjacentAddressEntries: Record<string, AddressEntry>
     ) => {
       if (currentLevelAddressEntries.length === 0) {
         return;
@@ -87,7 +88,7 @@ export const useNodesAndEdges = (direction: Direction) => {
             const node: Omit<IAddressNode, "position"> = {
               id: address,
               data: {
-                ...(nextLevelAddressEntry || { address, transactions: [] }),
+                address,
                 direction,
                 spendingTransactionLength: nextLevelAddressEntry
                   ? getSpendingTransactionIds(nextLevelAddressEntry, transactions).length
@@ -97,7 +98,15 @@ export const useNodesAndEdges = (direction: Direction) => {
               type: "addressNode",
             };
 
-            if (!nodes.find((existingNode) => existingNode.id === node.id)) {
+            const adjacentAddressEntry = adjacentAddressEntries[address] as AddressEntry | undefined;
+
+            if (adjacentAddressEntry && adjacentAddressEntry.xpub !== addressEntry.xpub) {
+              continue;
+            }
+
+            const existingNode = nodes.find((existingNode) => existingNode.id === node.id);
+
+            if (!existingNode) {
               nodes.push(node);
             }
 
@@ -107,14 +116,21 @@ export const useNodesAndEdges = (direction: Direction) => {
               target: node.id,
             });
 
-            if (nextLevelAddressEntry) {
+            if (nextLevelAddressEntry && !existingNode) {
               nextLevelAddressEntries.push(nextLevelAddressEntry);
             }
           }
         }
       }
 
-      populateAddressNodesAndEdges(nodes, edges, nextLevelAddressEntries, addressEntries, transactions);
+      populateAddressNodesAndEdges(
+        nodes,
+        edges,
+        nextLevelAddressEntries,
+        addressEntries,
+        transactions,
+        adjacentAddressEntries
+      );
     },
     [getSpendingTransactionIds, direction]
   );
@@ -125,23 +141,25 @@ export const useNodesAndEdges = (direction: Direction) => {
       edges: Edge[],
       xpubNode: PositionlessNode,
       addressEntries: Record<string, AddressEntry>,
-      transactions: Record<string, Transaction>
+      transactions: Record<string, Transaction>,
+      adjacentAddressEntries: Record<string, AddressEntry>
     ) => {
       const xpubAddressEntries = Object.values(addressEntries).filter(
-        (a) =>
-          // todo: xpub wallet condition
-          !a.isChange &&
-          a.transactionIds.length > 0 &&
-          a.transactionIds.some((transactionId) =>
+        (addressEntry) =>
+          addressEntry.xpub === xpubNode.id &&
+          !addressEntry.isChange &&
+          addressEntry.transactionIds.length > 0 &&
+          (addressEntry.transactionIds.some((transactionId) =>
             transactions[transactionId].vin.some((vin) => !transactions[vin.txid])
-          )
+          ) ||
+            adjacentAddressEntries[addressEntry.address])
       );
 
       for (const addressEntry of xpubAddressEntries) {
         const node: Omit<IAddressNode, "position"> = {
           id: addressEntry.address,
           data: {
-            ...addressEntry,
+            address: addressEntry.address,
             direction,
             spendingTransactionLength: getSpendingTransactionIds(addressEntry, transactions).length,
             type: "xpubAddress",
@@ -169,7 +187,8 @@ export const useNodesAndEdges = (direction: Direction) => {
       nodes: PositionlessNode[],
       edges: Edge[],
       addressEntries: Record<string, AddressEntry>,
-      transactions: Record<string, Transaction>
+      transactions: Record<string, Transaction>,
+      adjacentAddressEntries: Record<string, AddressEntry>
     ) => {
       const xpub = wallet.hdKey.publicExtendedKey;
 
@@ -181,9 +200,23 @@ export const useNodesAndEdges = (direction: Direction) => {
 
       nodes.push(xpubNode);
 
-      const xpubAddressEntries = getXpubAddressesNodesAndEdges(nodes, edges, xpubNode, addressEntries, transactions);
+      const xpubAddressEntries = getXpubAddressesNodesAndEdges(
+        nodes,
+        edges,
+        xpubNode,
+        addressEntries,
+        transactions,
+        adjacentAddressEntries
+      );
 
-      populateAddressNodesAndEdges(nodes, edges, xpubAddressEntries, addressEntries, transactions);
+      populateAddressNodesAndEdges(
+        nodes,
+        edges,
+        xpubAddressEntries,
+        addressEntries,
+        transactions,
+        adjacentAddressEntries
+      );
     },
     [getXpubAddressesNodesAndEdges, populateAddressNodesAndEdges, direction]
   );

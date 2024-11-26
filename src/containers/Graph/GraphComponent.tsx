@@ -59,8 +59,24 @@ export const GraphComponent = ({ addressEntries, transactions }: Props) => {
     const allNodes: PositionlessNode[] = [];
     const allEdges: Edge[] = [];
 
+    const adjacentAddressEntries = Object.values(addressEntries).reduce((acc, addressEntry) => {
+      addressEntry.transactionIds.some((transactionId) =>
+        transactions[transactionId].vout.some((vout) => {
+          const existingAddressEntry = addressEntries[vout.scriptPubKey.address];
+
+          if (existingAddressEntry && existingAddressEntry.xpub !== addressEntry.xpub) {
+            acc[existingAddressEntry.address] = existingAddressEntry;
+          }
+
+          return acc;
+        })
+      );
+
+      return acc;
+    }, {} as Record<string, AddressEntry>);
+
     for (const wallet of wallets) {
-      populateNodesAndEdges(wallet, allNodes, allEdges, addressEntries, transactions);
+      populateNodesAndEdges(wallet, allNodes, allEdges, addressEntries, transactions, adjacentAddressEntries);
     }
 
     return getLayoutedNodesAndEdges(allNodes, allEdges, direction);
