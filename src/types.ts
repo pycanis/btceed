@@ -1,4 +1,6 @@
+import { HDKey } from "@scure/bip32";
 import { Node } from "@xyflow/react";
+import { DBSchema } from "idb";
 
 // todo: all types
 export type ScriptType = "p2wpkh" | "p2tr" | "p2pkh";
@@ -71,3 +73,14 @@ export type AddressNode = Node<
 export type AddressNodeType = "xpubAddress" | "changeAddress" | "externalAddress";
 
 export type Direction = "TB" | "LR" | "RL" | "BT";
+
+export type Wallet = {
+  hdKey: HDKey;
+  scriptType: ScriptType;
+};
+
+export type XpubStoreValue = { xpub: string; scriptType: ScriptType; label?: string };
+
+export interface DatabaseSchema extends DBSchema {
+  xpubs: { key: number; value: XpubStoreValue };
+}

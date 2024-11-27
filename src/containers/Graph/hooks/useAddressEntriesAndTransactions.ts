@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import useWebSocket, { Options } from "react-use-websocket";
 import { GAP_LIMIT, GET_HISTORY, GET_TRANSACTION } from "../../../constants";
 import { useElectrumContext } from "../../../contexts/ElectrumContext";
-import { useWalletContext } from "../../../contexts/WalletContext";
-import { AddressEntry, HistoryItem, Transaction } from "../../../types";
+import { AddressEntry, HistoryItem, Transaction, Wallet } from "../../../types";
 import { useAddressService } from "./useAddressService";
 
 type XpubLastActiveIndexes = Record<string, { receive: number; change: number }>;
@@ -112,10 +111,8 @@ const reducer = (state: State, action: Action): State => {
   }
 };
 
-export const useAddressEntriesAndTransactions = () => {
+export const useAddressEntriesAndTransactions = (wallets: Wallet[]) => {
   const { electrumUrl } = useElectrumContext();
-  const { wallets } = useWalletContext();
-
   const { deriveAddressRange } = useAddressService();
 
   const initialAddressEntries = useMemo(
@@ -196,6 +193,9 @@ export const useAddressEntriesAndTransactions = () => {
       share: true,
       shouldReconnect: () => true,
       filter: () => false,
+      onOpen: () => console.log("Connected to Electrum server."),
+      onClose: () => console.log("Connection to Electrum server stopped."),
+      onError: (e) => console.error("Electrum server connection error.", e),
       onMessage: handleElectrumMessage,
     }),
     [handleElectrumMessage]

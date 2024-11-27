@@ -1,12 +1,12 @@
 import { Edge } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
-import { Wallet } from "../../../contexts/WalletContext";
 import {
   AddressEntry,
   Direction,
   AddressNode as IAddressNode,
   PositionlessNode,
   Transaction,
+  Wallet,
   XpubNode as XpubNodeType,
 } from "../../../types";
 

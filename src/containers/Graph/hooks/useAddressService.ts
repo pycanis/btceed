@@ -3,8 +3,7 @@ import { hex } from "@scure/base";
 import { payments } from "bitcoinjs-lib";
 import { useCallback, useMemo } from "react";
 import { GAP_LIMIT } from "../../../constants";
-import { Wallet } from "../../../contexts/WalletContext";
-import { AddressEntry, ScriptType } from "../../../types";
+import { AddressEntry, ScriptType, Wallet } from "../../../types";
 
 export const useAddressService = () => {
   const getPayment = useCallback((publicKey: Uint8Array, scriptType: ScriptType) => {

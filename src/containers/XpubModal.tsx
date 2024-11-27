@@ -1,32 +1,38 @@
 import { HDKey } from "@scure/bip32";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import { Modal } from "../components/Modal";
-import { useWalletContext } from "../contexts/WalletContext";
+import { DB_XPUBS_COLLECTION, GET_DB_XPUBS } from "../constants";
+import { useDatabaseContext } from "../contexts/DatabaseContext";
 
 export const XpubModal = () => {
-  const { setWallets } = useWalletContext();
+  const { db } = useDatabaseContext();
   const [xpub, setXpub] = useState("");
+  const queryClient = useQueryClient();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // @ts-expect-error db.get expects only number as identifier but string works too
+    const existingXpub = await db.get(DB_XPUBS_COLLECTION, xpub);
+
+    if (existingXpub) {
+      return alert("Xpub already exists.");
+    }
+
     try {
-      const hdKey = HDKey.fromExtendedKey(xpub);
+      HDKey.fromExtendedKey(xpub);
 
-      setWallets((prev) => [...prev, { hdKey, scriptType: "p2wpkh" }]);
+      await db.add(DB_XPUBS_COLLECTION, { xpub, scriptType: "p2wpkh" });
+
+      await queryClient.invalidateQueries({ queryKey: [GET_DB_XPUBS] });
     } catch (_) {
-      alert("Invalid xpub");
+      alert("Invalid xpub.");
     }
   };
 
   return (
-    <Modal
-      header="Enter xpub"
-      closable={false}
-      onClose={() => {
-        console.log("close");
-      }}
-    >
+    <Modal header="Enter xpub" closable={false}>
       <Input value={xpub} onChange={(e) => setXpub(e.target.value)} />
 
       <Button size="sm" onClick={handleSubmit}>

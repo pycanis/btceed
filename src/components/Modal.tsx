@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 type Props = {
   header: string;
   children: ReactNode;
-  closable: boolean;
-  onClose: () => void;
+  closable?: boolean;
+  onClose?: () => void;
 };
 
 export const Modal = ({ header, children, closable = true, onClose }: Props) => {

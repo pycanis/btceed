@@ -2,23 +2,23 @@ import dagre from "@dagrejs/dagre";
 import { Edge, ReactFlow } from "@xyflow/react";
 import { useCallback, useMemo, useState } from "react";
 import { NODE_HEIGHT, NODE_WIDTH } from "../../constants";
-import { useWalletContext } from "../../contexts/WalletContext";
-import { AddressEntry, Direction, PositionlessNode, Transaction } from "../../types";
+import { AddressEntry, Direction, PositionlessNode, Wallet } from "../../types";
 import { GraphControls } from "./GraphControls";
 import { useNodesAndEdges } from "./hooks/useNodesAndEdges";
 import { nodeTypes } from "./Node";
 
 import "@xyflow/react/dist/style.css";
+import { useAddressEntriesAndTransactions } from "./hooks/useAddressEntriesAndTransactions";
 
 type Props = {
-  addressEntries: Record<string, AddressEntry>;
-  transactions: Record<string, Transaction>;
+  wallets: Wallet[];
 };
 
-export const GraphComponent = ({ addressEntries, transactions }: Props) => {
-  const { wallets } = useWalletContext();
+export const GraphComponent = ({ wallets }: Props) => {
   const [direction, setDirection] = useState<Direction>("TB");
   const { populateNodesAndEdges } = useNodesAndEdges(direction);
+
+  const { addressEntries, transactions, isLoading } = useAddressEntriesAndTransactions(wallets);
 
   const dagreGraph = useMemo(() => new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({})), []);
 
@@ -56,6 +56,10 @@ export const GraphComponent = ({ addressEntries, transactions }: Props) => {
   );
 
   const { nodes, edges } = useMemo(() => {
+    if (isLoading) {
+      return { nodes: [], edges: [] };
+    }
+
     const allNodes: PositionlessNode[] = [];
     const allEdges: Edge[] = [];
 
@@ -82,7 +86,11 @@ export const GraphComponent = ({ addressEntries, transactions }: Props) => {
     }
 
     return getLayoutedNodesAndEdges(allNodes, allEdges, direction);
-  }, [wallets, populateNodesAndEdges, getLayoutedNodesAndEdges, addressEntries, transactions, direction]);
+  }, [wallets, isLoading, populateNodesAndEdges, getLayoutedNodesAndEdges, addressEntries, transactions, direction]);
+
+  if (isLoading) {
+    return <>loading..</>;
+  }
 
   return (
     <ReactFlow
