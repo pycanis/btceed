@@ -53,8 +53,7 @@ export const useNodesAndEdges = (direction: Direction) => {
       edges: Edge[],
       currentLevelAddressEntries: AddressEntry[],
       addressEntries: Record<string, AddressEntry>,
-      transactions: Record<string, Transaction>,
-      adjacentAddressEntries: Record<string, AddressEntry>
+      transactions: Record<string, Transaction>
     ) => {
       if (currentLevelAddressEntries.length === 0) {
         return;
@@ -98,12 +97,6 @@ export const useNodesAndEdges = (direction: Direction) => {
               type: "addressNode",
             };
 
-            const adjacentAddressEntry = adjacentAddressEntries[address] as AddressEntry | undefined;
-
-            if (adjacentAddressEntry && adjacentAddressEntry.xpub !== addressEntry.xpub) {
-              continue;
-            }
-
             const existingNode = nodes.find((existingNode) => existingNode.id === node.id);
 
             if (!existingNode) {
@@ -123,14 +116,7 @@ export const useNodesAndEdges = (direction: Direction) => {
         }
       }
 
-      populateAddressNodesAndEdges(
-        nodes,
-        edges,
-        nextLevelAddressEntries,
-        addressEntries,
-        transactions,
-        adjacentAddressEntries
-      );
+      populateAddressNodesAndEdges(nodes, edges, nextLevelAddressEntries, addressEntries, transactions);
     },
     [getSpendingTransactionIds, direction]
   );
@@ -144,16 +130,28 @@ export const useNodesAndEdges = (direction: Direction) => {
       transactions: Record<string, Transaction>,
       adjacentAddressEntries: Record<string, AddressEntry>
     ) => {
-      const xpubAddressEntries = Object.values(addressEntries).filter(
-        (addressEntry) =>
+      const xpubAddressEntries = Object.values(addressEntries).filter((addressEntry) => {
+        const adjacentAddressEntry = adjacentAddressEntries[addressEntry.address];
+
+        if (adjacentAddressEntry && adjacentAddressEntry.xpub === xpubNode.id) {
+          edges.push({
+            id: `${xpubNode.id}-${adjacentAddressEntry.address}`,
+            source: xpubNode.id,
+            target: adjacentAddressEntry.address,
+            animated: true,
+          });
+        }
+
+        return (
           addressEntry.xpub === xpubNode.id &&
           !addressEntry.isChange &&
           addressEntry.transactionIds.length > 0 &&
-          (addressEntry.transactionIds.some((transactionId) =>
+          // the following condition basically means 'funded externally'
+          addressEntry.transactionIds.some((transactionId) =>
             transactions[transactionId].vin.some((vin) => !transactions[vin.txid])
-          ) ||
-            adjacentAddressEntries[addressEntry.address])
-      );
+          )
+        );
+      });
 
       for (const addressEntry of xpubAddressEntries) {
         const node: Omit<IAddressNode, "position"> = {
@@ -209,14 +207,7 @@ export const useNodesAndEdges = (direction: Direction) => {
         adjacentAddressEntries
       );
 
-      populateAddressNodesAndEdges(
-        nodes,
-        edges,
-        xpubAddressEntries,
-        addressEntries,
-        transactions,
-        adjacentAddressEntries
-      );
+      populateAddressNodesAndEdges(nodes, edges, xpubAddressEntries, addressEntries, transactions);
     },
     [getXpubAddressesNodesAndEdges, populateAddressNodesAndEdges, direction]
   );

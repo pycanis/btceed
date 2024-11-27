@@ -64,11 +64,13 @@ export const GraphComponent = ({ addressEntries, transactions }: Props) => {
         transactions[transactionId].vout.some((vout) => {
           const existingAddressEntry = addressEntries[vout.scriptPubKey.address];
 
-          if (existingAddressEntry && existingAddressEntry.xpub !== addressEntry.xpub) {
+          if (
+            existingAddressEntry &&
+            !existingAddressEntry.isChange &&
+            existingAddressEntry.xpub !== addressEntry.xpub
+          ) {
             acc[existingAddressEntry.address] = existingAddressEntry;
           }
-
-          return acc;
         })
       );
 
