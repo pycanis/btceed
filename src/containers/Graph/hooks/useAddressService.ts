@@ -1,19 +1,25 @@
 import { sha256 } from "@noble/hashes/sha256";
 import { hex } from "@scure/base";
-import { payments } from "bitcoinjs-lib";
+import { initEccLib, payments } from "bitcoinjs-lib";
 import { useCallback, useMemo } from "react";
+import { isXOnlyPoint, xOnlyPointAddTweak } from "tiny-secp256k1";
 import { GAP_LIMIT } from "../../../constants";
 import { AddressEntry, ScriptType, Wallet } from "../../../types";
 
+initEccLib({ isXOnlyPoint, xOnlyPointAddTweak });
+
 export const useAddressService = () => {
   const getPayment = useCallback((publicKey: Uint8Array, scriptType: ScriptType) => {
-    // todo: add all script types
     switch (scriptType) {
-      case "p2wpkh":
+      case ScriptType.P2PKH:
+        return payments.p2pkh({
+          pubkey: publicKey,
+        });
+      case ScriptType.P2WPKH:
         return payments.p2wpkh({
           pubkey: publicKey,
         });
-      case "p2tr":
+      case ScriptType.P2TR:
         return payments.p2tr({
           internalPubkey: publicKey.slice(1),
         });

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@dagrejs/dagre": "^1.1.4",
+    "@hookform/resolvers": "^3.9.1",
     "@noble/hashes": "^1.5.0",
     "@scure/base": "^1.1.9",
     "@scure/bip32": "^1.5.0",
@@ -20,9 +21,11 @@
     "idb": "^8.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.2",
     "react-use-websocket": "^4.11.1",
     "tiny-secp256k1": "^2.2.3",
-    "vite-plugin-wasm": "^3.3.0"
+    "vite-plugin-wasm": "^3.3.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

@@ -1,13 +1,27 @@
-import { DetailedHTMLProps, InputHTMLAttributes } from "react";
+import { useFormContext, type FieldValues, type RegisterOptions } from "react-hook-form";
 
-export const Input = (props: DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>) => {
+type Props = {
+  name: string;
+  label: string;
+  labelClassName?: string;
+  registerOptions?: RegisterOptions<FieldValues, string>;
+} & React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
+
+export const Input = ({ label, name, labelClassName, registerOptions, className, ...rest }: Props) => {
+  const { register } = useFormContext();
+
   return (
-    <input
-      {...props}
-      className={"w-full p-2 mb-4 rounded-lg border-2 border-black focus:outline-none focus:border-red-400".concat(
-        " ",
-        props.className || ""
-      )}
-    />
+    <label className={labelClassName}>
+      {label}
+
+      <input
+        {...register(name, registerOptions)}
+        className={"w-full p-2 mb-4 rounded-lg border-2 border-black focus:outline-none focus:border-red-400".concat(
+          " ",
+          className || ""
+        )}
+        {...rest}
+      />
+    </label>
   );
 };

@@ -231,7 +231,7 @@ export const useAddressEntriesAndTransactions = (wallets: Wallet[]) => {
 
         const limitDiff = addressEntriesByType.length - GAP_LIMIT;
 
-        if (limitDiff < 0) {
+        if (limitDiff <= 0) {
           continue;
         }
 

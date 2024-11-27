@@ -2,8 +2,12 @@ import { HDKey } from "@scure/bip32";
 import { Node } from "@xyflow/react";
 import { DBSchema } from "idb";
 
-// todo: all types
-export type ScriptType = "p2wpkh" | "p2tr" | "p2pkh";
+export enum ScriptType {
+  P2PKH = "P2PKH",
+  //  "P2SH-P2WPKH" = "P2SH-P2WPKH",
+  P2WPKH = "P2WPKH",
+  P2TR = "P2TR",
+}
 
 export type Vin = {
   scriptSig: { asm: string; hex: string };

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { DB_XPUBS_COLLECTION, GET_DB_XPUBS } from "../../constants";
 import { useDatabaseContext } from "../../contexts/DatabaseContext";
-import { XpubModal } from "../XpubModal";
+import { XpubFormModal } from "../XpubFormModal";
 import { GraphComponent } from "./GraphComponent";
 
 export const Graph = () => {
@@ -27,7 +27,7 @@ export const Graph = () => {
     <>
       <GraphComponent key={wallets.length} wallets={wallets} />
 
-      {wallets.length === 0 && <XpubModal />}
+      {wallets.length === 0 && <XpubFormModal />}
     </>
   );
 };

@@ -10,7 +10,7 @@ import {
   XpubNode as XpubNodeType,
 } from "../../../types";
 
-// todo: optimize performance a bit
+// TODO: there might be some slight performance optimizations
 
 export const useNodesAndEdges = (direction: Direction) => {
   const getSpendingTransactionIds = useCallback(
@@ -124,13 +124,13 @@ export const useNodesAndEdges = (direction: Direction) => {
         }
 
         return (
-          addressEntry.xpub === xpubNode.id &&
-          !addressEntry.isChange &&
-          addressEntry.transactionIds.length > 0 &&
-          // the following condition basically means 'funded externally'
-          addressEntry.transactionIds.some((transactionId) =>
-            transactions[transactionId].vin.some((vin) => !transactions[vin.txid])
-          )
+          addressEntry.xpub === xpubNode.id && !addressEntry.isChange
+          // &&
+          // addressEntry.transactionIds.length > 0 &&
+          // // the following condition basically means 'funded externally'
+          // addressEntry.transactionIds.some((transactionId) =>
+          //   transactions[transactionId].vin.some((vin) => !transactions[vin.txid])
+          // )
         );
       });
 
