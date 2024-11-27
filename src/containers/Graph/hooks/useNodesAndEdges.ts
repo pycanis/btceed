@@ -10,26 +10,7 @@ import {
   XpubNode as XpubNodeType,
 } from "../../../types";
 
-<<<<<<< HEAD:src/containers/hooks/useNodesAndEdges.ts
-const xpub = "";
-
-const scriptType: ScriptType = "p2wpkh";
-
-const getSpendingTransactionIds = (addressEntry: AddressEntry, transactions: Record<string, Transaction>) =>
-  addressEntry.transactionIds.filter((transactionId) =>
-    transactions[transactionId].vin.some((vin) =>
-      addressEntry.transactionIds.some((txId) =>
-        transactions[txId].vout.some(
-          (vout) => txId !== transactionId && vout.n === vin.vout && vout.scriptPubKey.address === addressEntry.address
-        )
-      )
-    )
-  );
-
-// todo: revisit all this and optimize performance a bit
-=======
 // todo: optimize performance a bit
->>>>>>> 8a3497c (Some UI, multiple xpubs, infinite render bug):src/containers/Graph/hooks/useNodesAndEdges.ts
 
 export const useNodesAndEdges = (direction: Direction) => {
   const getSpendingTransactionIds = useCallback(
