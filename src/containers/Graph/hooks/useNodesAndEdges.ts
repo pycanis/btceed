@@ -84,11 +84,17 @@ export const useNodesAndEdges = (direction: Direction) => {
               nodes.push(node);
             }
 
-            edges.push({
-              id: `${addressEntry.address}-${node.id}`,
-              source: addressEntry.address,
-              target: node.id,
-            });
+            const edgeId = `${addressEntry.address}-${node.id}`;
+
+            const existingEdge = edges.find((existingEdge) => existingEdge.id === edgeId);
+
+            if (!existingEdge) {
+              edges.push({
+                id: edgeId,
+                source: addressEntry.address,
+                target: node.id,
+              });
+            }
 
             if (nextLevelAddressEntry && !existingNode) {
               nextLevelAddressEntries.push(nextLevelAddressEntry);
@@ -111,37 +117,20 @@ export const useNodesAndEdges = (direction: Direction) => {
       transactions: Record<string, Transaction>,
       adjacentAddressEntries: Record<string, AddressEntry>
     ) => {
-      const xpubAddressEntries = Object.values(addressEntries).filter((addressEntry) => {
-        const adjacentAddressEntry = adjacentAddressEntries[addressEntry.address];
-
-        if (adjacentAddressEntry && adjacentAddressEntry.xpub === xpubNode.id) {
-          edges.push({
-            id: `${xpubNode.id}-${adjacentAddressEntry.address}`,
-            source: xpubNode.id,
-            target: adjacentAddressEntry.address,
-            animated: true,
-          });
-        }
-
-        return (
-          addressEntry.xpub === xpubNode.id && !addressEntry.isChange
-          // &&
-          // addressEntry.transactionIds.length > 0 &&
-          // // the following condition basically means 'funded externally'
-          // addressEntry.transactionIds.some((transactionId) =>
-          //   transactions[transactionId].vin.some((vin) => !transactions[vin.txid])
-          // )
-        );
-      });
+      const xpubAddressEntries = Object.values(addressEntries).filter(
+        (addressEntry) => addressEntry.xpub === xpubNode.id && !addressEntry.isChange
+      );
 
       for (const addressEntry of xpubAddressEntries) {
+        const adjacentAddressEntry = adjacentAddressEntries[addressEntry.address];
+
         const node: Omit<IAddressNode, "position"> = {
           id: addressEntry.address,
           data: {
             address: addressEntry.address,
             direction,
             spendingTransactionLength: getSpendingTransactionIds(addressEntry, transactions).length,
-            type: "xpubAddress",
+            type: adjacentAddressEntry ? "changeAddress" : "xpubAddress",
           },
           type: "addressNode",
         };
@@ -152,6 +141,7 @@ export const useNodesAndEdges = (direction: Direction) => {
           id: `${xpubNode.id}-${node.id}`,
           source: xpubNode.id,
           target: node.id,
+          animated: !!adjacentAddressEntry,
         });
       }
 

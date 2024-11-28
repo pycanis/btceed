@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { HDKey } from "@scure/bip32";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { TypeOf, z } from "zod";
 import { Button } from "../components/Button";
 import { Form } from "../components/Form";
@@ -24,31 +25,36 @@ const schema = z.object({
 
 type FormValues = TypeOf<typeof schema>;
 
-export const XpubFormModal = () => {
+type Props = { onClose?: () => void };
+
+export const XpubFormModal = ({ onClose }: Props) => {
   const { db } = useDatabaseContext();
   const queryClient = useQueryClient();
 
-  const handleSubmit = async ({ xpub, scriptType }: FormValues) => {
-    // @ts-expect-error db.get expects only number as identifier but string works too
-    const existingXpub = await db.get(DB_XPUBS_COLLECTION, xpub);
+  const handleSubmit = useCallback(
+    async ({ xpub, scriptType }: FormValues) => {
+      // @ts-expect-error db expects only number as identifier but string works too
+      const existingXpub = await db.get(DB_XPUBS_COLLECTION, xpub);
 
-    if (existingXpub) {
-      return alert("Xpub already exists.");
-    }
+      if (existingXpub) {
+        return alert("Xpub already exists.");
+      }
 
-    try {
-      HDKey.fromExtendedKey(xpub);
+      try {
+        HDKey.fromExtendedKey(xpub);
 
-      await db.add(DB_XPUBS_COLLECTION, { xpub, scriptType });
+        await db.add(DB_XPUBS_COLLECTION, { xpub, scriptType });
 
-      await queryClient.invalidateQueries({ queryKey: [GET_DB_XPUBS] });
-    } catch (_) {
-      alert("Invalid xpub.");
-    }
-  };
+        await queryClient.invalidateQueries({ queryKey: [GET_DB_XPUBS] });
+      } catch (_) {
+        alert("Invalid xpub.");
+      }
+    },
+    [db, queryClient]
+  );
 
   return (
-    <Modal header="Enter xpub" closable={false}>
+    <Modal header="Add wallet" onClose={onClose}>
       <Form onSubmit={handleSubmit} resolver={zodResolver(schema)}>
         <Input name="xpub" label="Xpub" placeholder="xpub6.." />
 

@@ -3,11 +3,10 @@ import type { ReactNode } from "react";
 type Props = {
   header: string;
   children: ReactNode;
-  closable?: boolean;
   onClose?: () => void;
 };
 
-export const Modal = ({ header, children, closable = true, onClose }: Props) => {
+export const Modal = ({ header, children, onClose }: Props) => {
   return (
     <>
       <div className="w-screen h-screen fixed top-0 left-0 bg-black opacity-30 z-10" />
@@ -15,7 +14,7 @@ export const Modal = ({ header, children, closable = true, onClose }: Props) => 
         <div className="flex justify-between">
           <p className="text-lg font-bold mb-4">{header}</p>
 
-          {closable && (
+          {onClose && (
             <div className="cursor-pointer" onClick={onClose}>
               ✕
             </div>

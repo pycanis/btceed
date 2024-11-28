@@ -1,8 +1,8 @@
-import { HDKey } from "@scure/bip32";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { DB_XPUBS_COLLECTION, GET_DB_XPUBS } from "../../constants";
 import { useDatabaseContext } from "../../contexts/DatabaseContext";
+import { getWallet } from "../../utils/wallet";
 import { XpubFormModal } from "../XpubFormModal";
 import { GraphComponent } from "./GraphComponent";
 
@@ -14,10 +14,7 @@ export const Graph = () => {
     queryFn: () => db.getAll(DB_XPUBS_COLLECTION),
   });
 
-  const wallets = useMemo(
-    () => xpubStoreValues.map(({ xpub, scriptType }) => ({ hdKey: HDKey.fromExtendedKey(xpub), scriptType })),
-    [xpubStoreValues]
-  );
+  const wallets = useMemo(() => xpubStoreValues.map(getWallet), [xpubStoreValues]);
 
   if (isLoading) {
     return <div>loading..</div>;

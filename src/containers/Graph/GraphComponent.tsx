@@ -3,11 +3,11 @@ import { Edge, ReactFlow } from "@xyflow/react";
 import { useCallback, useMemo, useState } from "react";
 import { NODE_HEIGHT, NODE_WIDTH } from "../../constants";
 import { AddressEntry, Direction, PositionlessNode, Wallet } from "../../types";
-import { GraphControls } from "./GraphControls";
 import { useNodesAndEdges } from "./hooks/useNodesAndEdges";
 import { nodeTypes } from "./Node";
 
 import "@xyflow/react/dist/style.css";
+import { Controls } from "./Controls/Controls";
 import { useAddressEntriesAndTransactions } from "./hooks/useAddressEntriesAndTransactions";
 
 type Props = {
@@ -106,7 +106,7 @@ export const GraphComponent = ({ wallets }: Props) => {
       panOnScroll={false} // todo: configurable
       fitView
     >
-      <GraphControls direction={direction} setDirection={setDirection} />
+      <Controls direction={direction} setDirection={setDirection} />
     </ReactFlow>
   );
 };
