@@ -83,8 +83,13 @@ export type Wallet = {
   scriptType: ScriptType;
 };
 
+export type ColorSchema = "light" | "dark" | "system";
+
 export type XpubStoreValue = { xpub: string; scriptType: ScriptType; label?: string };
 
+export type SettingsStoreValue = { panOnScroll: boolean; colorSchema: ColorSchema };
+
 export interface DatabaseSchema extends DBSchema {
-  xpubs: { key: number; value: XpubStoreValue };
+  xpubs: { key: string; value: XpubStoreValue };
+  settings: { key: number; value: SettingsStoreValue };
 }

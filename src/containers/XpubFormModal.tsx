@@ -8,7 +8,7 @@ import { Form } from "../components/Form";
 import { Input } from "../components/Input";
 import { Modal } from "../components/Modal";
 import { SelectInput, SelectOption } from "../components/SelectInput";
-import { DB_XPUBS_COLLECTION, GET_DB_XPUBS } from "../constants";
+import { GET_DB_XPUBS } from "../constants";
 import { useDatabaseContext } from "../contexts/DatabaseContext";
 import { ScriptType } from "../types";
 
@@ -33,8 +33,7 @@ export const XpubFormModal = ({ onClose }: Props) => {
 
   const handleSubmit = useCallback(
     async ({ xpub, scriptType }: FormValues) => {
-      // @ts-expect-error db expects only number as identifier but string works too
-      const existingXpub = await db.get(DB_XPUBS_COLLECTION, xpub);
+      const existingXpub = await db.get("xpubs", xpub);
 
       if (existingXpub) {
         return alert("Xpub already exists.");
@@ -43,7 +42,7 @@ export const XpubFormModal = ({ onClose }: Props) => {
       try {
         HDKey.fromExtendedKey(xpub);
 
-        await db.add(DB_XPUBS_COLLECTION, { xpub, scriptType });
+        await db.add("xpubs", { xpub, scriptType });
 
         await queryClient.invalidateQueries({ queryKey: [GET_DB_XPUBS] });
       } catch (_) {

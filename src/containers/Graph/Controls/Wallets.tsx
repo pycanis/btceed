@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "../../../components/Button";
 import { Popover } from "../../../components/Popover";
-import { DB_XPUBS_COLLECTION, GET_DB_XPUBS } from "../../../constants";
+import { GET_DB_XPUBS } from "../../../constants";
 import { useDatabaseContext } from "../../../contexts/DatabaseContext";
 import { WalletIcon } from "../../../icons/Wallet";
 import { getBothSideSubstring } from "../../../utils/strings";
@@ -18,13 +18,12 @@ export const Wallets = () => {
 
   const { data = [] } = useQuery({
     queryKey: [GET_DB_XPUBS],
-    queryFn: () => db.getAll(DB_XPUBS_COLLECTION),
+    queryFn: () => db.getAll("xpubs"),
   });
 
   const handleDelete = useCallback(
     async (xpub: string) => {
-      // @ts-expect-error db expects only number as identifier but string works too
-      await db.delete(DB_XPUBS_COLLECTION, xpub);
+      await db.delete("xpubs", xpub);
 
       await queryClient.invalidateQueries({ queryKey: [GET_DB_XPUBS] });
     },
@@ -59,7 +58,7 @@ export const Wallets = () => {
             </div>
           ))}
 
-          <Button className="mt-2" size="sm" onClick={() => setAddWalletModalOpened(true)}>
+          <Button className="mt-4" size="sm" onClick={() => setAddWalletModalOpened(true)}>
             Add wallet
           </Button>
         </ControlPopoverLayout>

@@ -1,6 +1,6 @@
 import { IDBPDatabase, openDB } from "idb";
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { DB_NAME, DB_VERSION, DB_XPUBS_COLLECTION } from "../constants";
+import { DB_NAME, DB_VERSION } from "../constants";
 import { DatabaseSchema } from "../types";
 
 type DatabaseContext = {
@@ -19,7 +19,8 @@ export const DatabaseProvider = ({ children }: Props) => {
   useEffect(() => {
     openDB<DatabaseSchema>(DB_NAME, DB_VERSION, {
       upgrade: (db) => {
-        db.createObjectStore(DB_XPUBS_COLLECTION, { keyPath: "xpub" });
+        db.createObjectStore("xpubs", { keyPath: "xpub" });
+        db.createObjectStore("settings", { autoIncrement: true });
       },
     }).then((db) => setDb(db));
   }, []);

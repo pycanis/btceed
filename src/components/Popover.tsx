@@ -54,7 +54,7 @@ export const Popover = ({ triggerNode, children }: Props) => {
       </div>
 
       {isOpen && (
-        <div ref={setPopperElement} style={styles.popper} {...attributes.popper}>
+        <div ref={setPopperElement} className="w-fit" style={styles.popper} {...attributes.popper}>
           {children}
         </div>
       )}
