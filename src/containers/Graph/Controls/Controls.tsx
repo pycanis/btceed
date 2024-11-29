@@ -30,7 +30,7 @@ export const Controls = ({ direction, setDirection }: Props) => {
       </Panel>
 
       <Panel position="top-right">
-        <div className="border border-text dark:border-darkText shadow-2xl">
+        <div className="border border-text rounded-md overflow-hidden dark:border-darkText shadow-2xl">
           <Wallets />
 
           <Settings />

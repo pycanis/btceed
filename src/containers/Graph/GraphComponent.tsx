@@ -1,21 +1,22 @@
 import dagre from "@dagrejs/dagre";
 import { Edge, ReactFlow } from "@xyflow/react";
 import { useCallback, useMemo, useState } from "react";
-import { DEFAULT_SETTINGS, NODE_HEIGHT, NODE_WIDTH } from "../../constants";
-import { AddressEntry, Direction, PositionlessNode, SettingsStoreValue, Wallet } from "../../types";
+import { NODE_HEIGHT, NODE_WIDTH } from "../../constants";
+import { AddressEntry, Direction, PositionlessNode, Wallet } from "../../types";
 import { Controls } from "./Controls/Controls";
 import { useAddressEntriesAndTransactions } from "./hooks/useAddressEntriesAndTransactions";
 import { useNodesAndEdges } from "./hooks/useNodesAndEdges";
 import { nodeTypes } from "./Node";
 
 import "@xyflow/react/dist/style.css";
+import { useSettingsContext } from "../../contexts/SettingsContext";
 
 type Props = {
   wallets: Wallet[];
-  settings?: SettingsStoreValue;
 };
 
-export const GraphComponent = ({ wallets, settings }: Props) => {
+export const GraphComponent = ({ wallets }: Props) => {
+  const { settings } = useSettingsContext();
   const [direction, setDirection] = useState<Direction>("TB");
   const { populateNodesAndEdges } = useNodesAndEdges(direction);
 
@@ -108,7 +109,7 @@ export const GraphComponent = ({ wallets, settings }: Props) => {
       nodesFocusable={false}
       edgesFocusable={false}
       edgesReconnectable={false}
-      panOnScroll={settings?.panOnScroll || DEFAULT_SETTINGS.panOnScroll}
+      panOnScroll={settings.panOnScroll}
       fitView
     >
       <Controls direction={direction} setDirection={setDirection} />

@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
 import { DatabaseProvider } from "./contexts/DatabaseContext.tsx";
 import { ElectrumProvider } from "./contexts/ElectrumContext.tsx";
+import { SettingsProvider } from "./contexts/SettingsContext.tsx";
 import "./index.css";
 
 const queryClient = new QueryClient({
@@ -14,9 +15,11 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <DatabaseProvider>
-        <ElectrumProvider>
-          <App />
-        </ElectrumProvider>
+        <SettingsProvider>
+          <ElectrumProvider>
+            <App />
+          </ElectrumProvider>
+        </SettingsProvider>
       </DatabaseProvider>
     </QueryClientProvider>
   </StrictMode>

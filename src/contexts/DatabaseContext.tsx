@@ -29,7 +29,7 @@ export const DatabaseProvider = ({ children }: Props) => {
 
   return (
     <DatabaseContext.Provider value={contextValue as DatabaseContext}>
-      {db ? children : <>loading..</>}
+      {!db ? <>loading..</> : children}
     </DatabaseContext.Provider>
   );
 };

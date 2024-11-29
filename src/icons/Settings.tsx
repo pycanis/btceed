@@ -1,16 +1,7 @@
 export const SettingsIcon = () => {
   return (
-    <svg
-      version="1.0"
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 512.000000 512.000000"
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <g
-        className="fill-text dark:fill-bg"
-        transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
-        stroke="none"
-      >
+    <svg version="1.0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
+      <g className="fill-text dark:fill-bg" transform="translate(0,512) scale(0.100000,-0.100000)" stroke="none">
         <path
           d="M2245 5111 c-50 -13 -112 -49 -151 -88 -65 -64 -81 -117 -111 -354
 -14 -118 -31 -219 -36 -226 -5 -7 -25 -17 -45 -23 -20 -7 -83 -32 -140 -57

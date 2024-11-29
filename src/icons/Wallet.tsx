@@ -1,16 +1,7 @@
 export const WalletIcon = () => {
   return (
-    <svg
-      version="1.0"
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 512.000000 512.000000"
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <g
-        className="fill-text dark:fill-bg"
-        transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
-        stroke="none"
-      >
+    <svg version="1.0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
+      <g className="fill-text dark:fill-bg" transform="translate(0,512) scale(0.100000,-0.100000)" stroke="none">
         <path
           d="M2800 5007 c-42 -13 -1843 -900 -1864 -919 -6 -4 49 -8 121 -8 l131
 0 1014 276 c557 152 1017 280 1022 284 4 4 -19 64 -53 133 -66 134 -107 183

@@ -14,4 +14,5 @@ export const GET_DB_SETTINGS = "settings";
 
 export const DEFAULT_SETTINGS = {
   panOnScroll: false,
+  colorScheme: "system" as const,
 };
