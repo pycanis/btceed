@@ -10,7 +10,7 @@ export const Popover = ({ triggerNode, children }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [triggerElement, setTriggerElement] = useState<HTMLDivElement | null>(null);
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null);
-  const { styles, attributes } = usePopper(triggerElement, popperElement, { placement: "left-end" });
+  const { styles, attributes } = usePopper(triggerElement, popperElement, { placement: "left-start" });
 
   const handleClickOutside = useCallback(
     (event: MouseEvent) => {
@@ -54,7 +54,7 @@ export const Popover = ({ triggerNode, children }: Props) => {
       </div>
 
       {isOpen && (
-        <div ref={setPopperElement} style={styles.popper} className="bg-red-200" {...attributes.popper}>
+        <div ref={setPopperElement} style={styles.popper} {...attributes.popper}>
           {children}
         </div>
       )}

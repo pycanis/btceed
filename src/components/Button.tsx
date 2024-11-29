@@ -8,9 +8,9 @@ type Props = {
 } & React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
 
 const variantStyles: Record<Variant, string> = {
-  contained: "rounded-lg bg-slate-500 text-white shadow-sm hover:shadow-md hover:bg-opacity-90",
-  outlined: "rounded-lg bg-white text-red shadow-sm hover:shadow-md border",
-  text: "text-red hover:underline",
+  contained: "rounded-lg bg-primary dark:bg-darkPrimary text-text shadow-sm hover:shadow-md hover:bg-opacity-90",
+  outlined: "rounded-lg bg-text text-primary shadow-sm hover:shadow-md hover:bg-opacity-50 border-2 border-primary",
+  text: "text-primary hover:underline",
 };
 
 const sizeStyles: Record<Size, string> = {
@@ -23,9 +23,9 @@ export const Button = ({ variant = "contained", size = "md", ...rest }: Props) =
   return (
     <button
       {...rest}
-      className={`font-semibold disabled:bg-black disabled:bg-opacity-60 transition duration-300 ${
-        variantStyles[variant]
-      } ${variant === "text" ? "" : sizeStyles[size]}`.concat(" ", rest.className || "")}
+      className={`font-semibold transition duration-300 ${variantStyles[variant]} ${
+        variant === "text" ? "" : sizeStyles[size]
+      }`.concat(" ", rest.className || "")}
     />
   );
 };

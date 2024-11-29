@@ -1,5 +1,6 @@
-import { ControlButton, useReactFlow, useStore } from "@xyflow/react";
+import { useReactFlow, useStore } from "@xyflow/react";
 import { useMemo } from "react";
+import { ControlButton } from "./ControlButton";
 
 export const Zoom = () => {
   const { zoomOut, zoomIn } = useReactFlow();
@@ -18,11 +19,11 @@ export const Zoom = () => {
   return (
     <>
       <ControlButton onClick={() => zoomIn()} disabled={zoomInDisabled}>
-        <span className={`font-thin text-xl ${zoomInDisabled ? "opacity-50" : ""}`}>+</span>
+        <span className={`text-xl ${zoomInDisabled ? "opacity-50" : ""}`}>+</span>
       </ControlButton>
 
-      <ControlButton onClick={() => zoomOut()} disabled={zoomOutDisabled}>
-        <span className={`font-thin text-xl -translate-y-px ${zoomOutDisabled ? "opacity-50" : ""}`}>-</span>
+      <ControlButton onClick={() => zoomOut()} disabled={zoomOutDisabled} noBorder>
+        <span className={`text-xl -translate-y-px ${zoomOutDisabled ? "opacity-50" : ""}`}>-</span>
       </ControlButton>
     </>
   );

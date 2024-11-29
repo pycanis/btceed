@@ -1,14 +1,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
-import walletIcon from "../../../assets/wallet.svg";
 import { Button } from "../../../components/Button";
 import { Popover } from "../../../components/Popover";
 import { DB_XPUBS_COLLECTION, GET_DB_XPUBS } from "../../../constants";
 import { useDatabaseContext } from "../../../contexts/DatabaseContext";
+import { WalletIcon } from "../../../icons/Wallet";
 import { getBothSideSubstring } from "../../../utils/strings";
 import { getWallet } from "../../../utils/wallet";
 import { XpubFormModal } from "../../XpubFormModal";
 import { ControlButton } from "./ControlButton";
+import { ControlPopoverLayout } from "./ControlPopoverLayout";
 
 export const Wallets = () => {
   const { db } = useDatabaseContext();
@@ -37,29 +38,31 @@ export const Wallets = () => {
       <Popover
         triggerNode={
           <ControlButton>
-            <img src={walletIcon} alt="Wallet icon." />
+            <WalletIcon />
           </ControlButton>
         }
       >
-        <div className="p-2">
-          <p className="mb-2">Wallets</p>
-
+        <ControlPopoverLayout header="Wallets">
           {wallets.map((wallet, i) => (
             <div key={i} className="flex">
               <p>
-                {wallet.label} ({getBothSideSubstring(wallet.hdKey.publicExtendedKey)})
+                {getBothSideSubstring(wallet.hdKey.publicExtendedKey)} {wallet.label ? `(${wallet.label})` : ""}
               </p>
 
-              <span className="ml-2" onClick={() => handleDelete(wallet.hdKey.publicExtendedKey)}>
+              <Button
+                className="ml-2 text-red-500"
+                variant="text"
+                onClick={() => handleDelete(wallet.hdKey.publicExtendedKey)}
+              >
                 X
-              </span>
+              </Button>
             </div>
           ))}
 
-          <Button size="sm" onClick={() => setAddWalletModalOpened(true)}>
+          <Button className="mt-2" size="sm" onClick={() => setAddWalletModalOpened(true)}>
             Add wallet
           </Button>
-        </div>
+        </ControlPopoverLayout>
       </Popover>
 
       {addWalletModalOpened && <XpubFormModal onClose={() => setAddWalletModalOpened(false)} />}

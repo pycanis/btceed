@@ -30,8 +30,8 @@ export const useNodesAndEdges = (direction: Direction) => {
 
   const populateAddressNodesAndEdges = useCallback(
     (
-      nodes: PositionlessNode[],
-      edges: Edge[],
+      nodes: Record<string, PositionlessNode>,
+      edges: Record<string, Edge>,
       currentLevelAddressEntries: AddressEntry[],
       addressEntries: Record<string, AddressEntry>,
       transactions: Record<string, Transaction>
@@ -78,22 +78,22 @@ export const useNodesAndEdges = (direction: Direction) => {
               type: "addressNode",
             };
 
-            const existingNode = nodes.find((existingNode) => existingNode.id === node.id);
+            const existingNode = nodes[node.id];
 
             if (!existingNode) {
-              nodes.push(node);
+              nodes[node.id] = node;
             }
 
-            const edgeId = `${addressEntry.address}-${node.id}`;
+            const edge = {
+              id: `${addressEntry.address}-${node.id}`,
+              source: addressEntry.address,
+              target: node.id,
+            };
 
-            const existingEdge = edges.find((existingEdge) => existingEdge.id === edgeId);
+            const existingEdge = edges[edge.id];
 
             if (!existingEdge) {
-              edges.push({
-                id: edgeId,
-                source: addressEntry.address,
-                target: node.id,
-              });
+              edges[edge.id] = edge;
             }
 
             if (nextLevelAddressEntry && !existingNode) {
@@ -110,8 +110,8 @@ export const useNodesAndEdges = (direction: Direction) => {
 
   const getXpubAddressesNodesAndEdges = useCallback(
     (
-      nodes: PositionlessNode[],
-      edges: Edge[],
+      nodes: Record<string, PositionlessNode>,
+      edges: Record<string, Edge>,
       xpubNode: PositionlessNode,
       addressEntries: Record<string, AddressEntry>,
       transactions: Record<string, Transaction>,
@@ -135,14 +135,16 @@ export const useNodesAndEdges = (direction: Direction) => {
           type: "addressNode",
         };
 
-        nodes.push(node);
-
-        edges.push({
+        const edge = {
           id: `${xpubNode.id}-${node.id}`,
           source: xpubNode.id,
           target: node.id,
           animated: !!adjacentAddressEntry,
-        });
+        };
+
+        nodes[node.id] = node;
+
+        edges[edge.id] = edge;
       }
 
       return xpubAddressEntries;
@@ -153,8 +155,8 @@ export const useNodesAndEdges = (direction: Direction) => {
   const populateNodesAndEdges = useCallback(
     (
       wallet: Wallet,
-      nodes: PositionlessNode[],
-      edges: Edge[],
+      nodes: Record<string, PositionlessNode>,
+      edges: Record<string, Edge>,
       addressEntries: Record<string, AddressEntry>,
       transactions: Record<string, Transaction>,
       adjacentAddressEntries: Record<string, AddressEntry>
@@ -167,7 +169,7 @@ export const useNodesAndEdges = (direction: Direction) => {
         type: "xpubNode",
       };
 
-      nodes.push(xpubNode);
+      nodes[xpubNode.id] = xpubNode;
 
       const xpubAddressEntries = getXpubAddressesNodesAndEdges(
         nodes,

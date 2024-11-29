@@ -60,8 +60,8 @@ export const GraphComponent = ({ wallets }: Props) => {
       return { nodes: [], edges: [] };
     }
 
-    const allNodes: PositionlessNode[] = [];
-    const allEdges: Edge[] = [];
+    const allNodes: Record<string, PositionlessNode> = {};
+    const allEdges: Record<string, Edge> = {};
 
     const adjacentAddressEntries = Object.values(addressEntries).reduce((acc, addressEntry) => {
       addressEntry.transactionIds.some((transactionId) =>
@@ -85,7 +85,11 @@ export const GraphComponent = ({ wallets }: Props) => {
       populateNodesAndEdges(wallet, allNodes, allEdges, addressEntries, transactions, adjacentAddressEntries);
     }
 
-    return getLayoutedNodesAndEdges(allNodes, allEdges, direction);
+    return getLayoutedNodesAndEdges(
+      Object.values(allNodes).map((node) => node),
+      Object.values(allEdges).map((edge) => edge),
+      direction
+    );
   }, [wallets, isLoading, populateNodesAndEdges, getLayoutedNodesAndEdges, addressEntries, transactions, direction]);
 
   if (isLoading) {

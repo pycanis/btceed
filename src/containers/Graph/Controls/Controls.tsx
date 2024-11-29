@@ -1,7 +1,7 @@
 import { Panel, useReactFlow } from "@xyflow/react";
 import { Dispatch, SetStateAction, useEffect } from "react";
-
 import { Direction } from "../../../types";
+import { Settings } from "./Settings";
 import { Wallets } from "./Wallets";
 import { Zoom } from "./Zoom";
 
@@ -30,14 +30,14 @@ export const Controls = ({ direction, setDirection }: Props) => {
       </Panel>
 
       <Panel position="top-right">
-        <div className="border border-gray-200 shadow-2xl">
+        <div className="border border-text dark:border-darkText shadow-2xl">
           <Wallets />
+
+          <Settings />
 
           <Zoom />
         </div>
       </Panel>
-
-      {/*       <Background color="red" variant={BackgroundVariant.Dots} />  */}
 
       {/*       <MiniMap zoomable pannable /> */}
     </>
