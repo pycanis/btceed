@@ -42,7 +42,7 @@ export const XpubFormModal = ({ onClose }: Props) => {
       try {
         HDKey.fromExtendedKey(xpub);
 
-        await db.add("xpubs", { xpub, scriptType });
+        await db.add("xpubs", { xpub, scriptType, createdAt: Date.now() });
 
         await queryClient.invalidateQueries({ queryKey: [GET_DB_XPUBS] });
       } catch (_) {

@@ -15,9 +15,9 @@ import {
 export const useNodesAndEdges = (direction: Direction) => {
   const getSpendingTransactionIds = useCallback(
     (addressEntry: AddressEntry, transactions: Record<string, Transaction>) =>
-      addressEntry.transactionIds.filter((transactionId) =>
+      addressEntry.transactionIds!.filter((transactionId) =>
         transactions[transactionId].vin.some((vin) =>
-          addressEntry.transactionIds.some((txId) =>
+          addressEntry.transactionIds!.some((txId) =>
             transactions[txId].vout.some(
               (vout) =>
                 txId !== transactionId && vout.n === vin.vout && vout.scriptPubKey.address === addressEntry.address
@@ -43,9 +43,9 @@ export const useNodesAndEdges = (direction: Direction) => {
       const nextLevelAddressEntries: AddressEntry[] = [];
 
       for (const addressEntry of currentLevelAddressEntries) {
-        const spendingTransactionIds = addressEntry.transactionIds.filter((transactionId) =>
+        const spendingTransactionIds = addressEntry.transactionIds!.filter((transactionId) =>
           transactions[transactionId].vin.some((vin) =>
-            addressEntry.transactionIds.some((txId) =>
+            addressEntry.transactionIds!.some((txId) =>
               transactions[txId].vout.some(
                 (vout) =>
                   txId !== transactionId && vout.n === vin.vout && vout.scriptPubKey.address === addressEntry.address
@@ -142,7 +142,9 @@ export const useNodesAndEdges = (direction: Direction) => {
           animated: !!adjacentAddressEntry,
         };
 
-        nodes[node.id] = node;
+        if (!adjacentAddressEntry) {
+          nodes[node.id] = node;
+        }
 
         edges[edge.id] = edge;
       }

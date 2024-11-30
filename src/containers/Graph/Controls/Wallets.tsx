@@ -18,7 +18,7 @@ export const Wallets = () => {
 
   const { data = [] } = useQuery({
     queryKey: [GET_DB_XPUBS],
-    queryFn: () => db.getAll("xpubs"),
+    queryFn: () => db.getAllFromIndex("xpubs", "createdAt"),
   });
 
   const handleDelete = useCallback(

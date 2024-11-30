@@ -45,7 +45,7 @@ export type AddressEntry = {
   scriptHash: string;
   isChange: boolean;
   index: number;
-  transactionIds: string[];
+  transactionIds?: string[];
   xpub: string;
 };
 
@@ -85,11 +85,11 @@ export type Wallet = {
 
 export type ColorScheme = "light" | "dark" | "system";
 
-export type XpubStoreValue = { xpub: string; scriptType: ScriptType; label?: string };
+export type XpubStoreValue = { xpub: string; scriptType: ScriptType; createdAt: number; label?: string };
 
 export type SettingsStoreValue = { panOnScroll: boolean; colorScheme: ColorScheme };
 
 export interface DatabaseSchema extends DBSchema {
-  xpubs: { key: string; value: XpubStoreValue };
+  xpubs: { key: string; value: XpubStoreValue; indexes: { createdAt: number } };
   settings: { key: number; value: SettingsStoreValue };
 }

@@ -51,7 +51,6 @@ export const useAddressService = () => {
         scriptHash: getScriptHash(output),
         isChange,
         index,
-        transactionIds: [],
         xpub: wallet.hdKey.publicExtendedKey,
       };
     },

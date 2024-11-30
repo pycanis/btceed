@@ -11,7 +11,7 @@ export const Graph = () => {
 
   const { data: xpubStoreValues = [], isLoading } = useQuery({
     queryKey: [GET_DB_XPUBS],
-    queryFn: () => db.getAll("xpubs"),
+    queryFn: () => db.getAllFromIndex("xpubs", "createdAt"),
   });
 
   const wallets = useMemo(() => xpubStoreValues.map(getWallet), [xpubStoreValues]);
@@ -22,7 +22,7 @@ export const Graph = () => {
 
   return (
     <>
-      <GraphComponent key={wallets.length} wallets={wallets} />
+      <GraphComponent wallets={wallets} />
 
       {wallets.length === 0 && <XpubFormModal />}
     </>
