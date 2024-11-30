@@ -1,11 +1,14 @@
 import { Handle, NodeProps, Position } from "@xyflow/react";
 import { useMemo } from "react";
+import { useSettingsContext } from "../../contexts/SettingsContext";
 import { AddressNodeType, Direction, AddressNode as IAddressNode, XpubNode as XpubNodeType } from "../../types";
 import { getBothSideSubstring } from "../../utils/strings";
 
 const nodeWrapperStyles = "w-24 h-6 rounded-lg text-xs flex justify-center items-center";
 
 const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
+  const { settings } = useSettingsContext();
+
   const handleDirectionMap = useMemo<Record<Direction, Position>>(
     () => ({
       TB: Position.Bottom,
@@ -19,12 +22,14 @@ const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
   return (
     <div className={`${nodeWrapperStyles} bg-green-400 h-6`}>
       <p>{getBothSideSubstring(data.xpub)}</p>
-      <Handle type="source" position={handleDirectionMap[data.direction]} id={id} />
+      <Handle type="source" position={handleDirectionMap[settings.direction]} id={id} />
     </div>
   );
 };
 
 const AddressNode = ({ id, data }: NodeProps<IAddressNode>) => {
+  const { settings } = useSettingsContext();
+
   const handleDirectionMap = useMemo<{ source: Record<Direction, Position>; target: Record<Direction, Position> }>(
     () => ({
       source: {
@@ -57,10 +62,10 @@ const AddressNode = ({ id, data }: NodeProps<IAddressNode>) => {
       <p>{getBothSideSubstring(data.address)}</p>
 
       {data.spendingTransactionLength > 0 && (
-        <Handle type="source" position={handleDirectionMap.source[data.direction]} id={id} />
+        <Handle type="source" position={handleDirectionMap.source[settings.direction]} id={id} />
       )}
 
-      <Handle type="target" position={handleDirectionMap.target[data.direction]} id={id} />
+      <Handle type="target" position={handleDirectionMap.target[settings.direction]} id={id} />
     </div>
   );
 };

@@ -59,7 +59,6 @@ export type PositionlessNode = Omit<Node, "position">;
 export type XpubNode = Node<
   {
     xpub: string;
-    direction: Direction;
   },
   "xpubNode"
 >;
@@ -67,7 +66,6 @@ export type XpubNode = Node<
 export type AddressNode = Node<
   {
     address: string;
-    direction: Direction;
     type: AddressNodeType;
     spendingTransactionLength: number;
   },
@@ -87,7 +85,7 @@ export type ColorScheme = "light" | "dark" | "system";
 
 export type XpubStoreValue = { xpub: string; scriptType: ScriptType; createdAt: number; label?: string };
 
-export type SettingsStoreValue = { panOnScroll: boolean; colorScheme: ColorScheme };
+export type SettingsStoreValue = { panOnScroll: boolean; colorScheme: ColorScheme; direction: Direction };
 
 export interface DatabaseSchema extends DBSchema {
   xpubs: { key: string; value: XpubStoreValue; indexes: { createdAt: number } };

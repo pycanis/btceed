@@ -1,16 +1,12 @@
 import { Panel, useReactFlow } from "@xyflow/react";
-import { Dispatch, SetStateAction, useEffect } from "react";
-import { Direction } from "../../../types";
+import { useEffect } from "react";
+import { useSettingsContext } from "../../../contexts/SettingsContext";
 import { Settings } from "./Settings";
 import { Wallets } from "./Wallets";
 import { Zoom } from "./Zoom";
 
-type Props = {
-  direction: Direction;
-  setDirection: Dispatch<SetStateAction<Direction>>;
-};
-
-export const Controls = ({ direction, setDirection }: Props) => {
+export const Controls = () => {
+  const { settings } = useSettingsContext();
   const { fitView } = useReactFlow();
 
   useEffect(() => {
@@ -18,17 +14,10 @@ export const Controls = ({ direction, setDirection }: Props) => {
     setTimeout(() => {
       fitView();
     }, 0);
-  }, [fitView, direction]);
+  }, [fitView, settings.direction]);
 
   return (
     <>
-      <Panel position="top-left">
-        <button onClick={() => setDirection("TB")}>top-bottom</button>
-        <button onClick={() => setDirection("LR")}>left-right</button>
-        <button onClick={() => setDirection("BT")}>bottom-top</button>
-        <button onClick={() => setDirection("RL")}>right-left</button>
-      </Panel>
-
       <Panel position="top-right">
         <div className="border border-text rounded-md overflow-hidden dark:border-darkText shadow-2xl">
           <Wallets />

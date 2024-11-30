@@ -1,9 +1,9 @@
 import dagre from "@dagrejs/dagre";
 import { Edge, ReactFlow } from "@xyflow/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { NODE_HEIGHT, NODE_WIDTH } from "../../constants";
 import { useSettingsContext } from "../../contexts/SettingsContext";
-import { AddressEntry, Direction, PositionlessNode, Wallet } from "../../types";
+import { AddressEntry, PositionlessNode, Wallet } from "../../types";
 import { Controls } from "./Controls/Controls";
 import { useAddressEntriesAndTransactions } from "./hooks/useAddressEntriesAndTransactions";
 import { useNodesAndEdges } from "./hooks/useNodesAndEdges";
@@ -17,42 +17,44 @@ type Props = {
 
 export const GraphComponent = ({ wallets }: Props) => {
   const { settings } = useSettingsContext();
-  const [direction, setDirection] = useState<Direction>("TB");
-  const { populateNodesAndEdges } = useNodesAndEdges(direction);
+  const { populateNodesAndEdges } = useNodesAndEdges();
 
   const { addressEntries, transactions, isLoading } = useAddressEntriesAndTransactions();
 
-  const getLayoutedNodesAndEdges = useCallback((nodes: PositionlessNode[], edges: Edge[], direction: Direction) => {
-    const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+  const getLayoutedNodesAndEdges = useCallback(
+    (nodes: PositionlessNode[], edges: Edge[]) => {
+      const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
 
-    dagreGraph.setGraph({ rankdir: direction, ranksep: 200 });
+      dagreGraph.setGraph({ rankdir: settings.direction, ranksep: 200 });
 
-    nodes.forEach((node) => {
-      dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
-    });
+      nodes.forEach((node) => {
+        dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+      });
 
-    edges.forEach((edge) => {
-      dagreGraph.setEdge(edge.source, edge.target);
-    });
+      edges.forEach((edge) => {
+        dagreGraph.setEdge(edge.source, edge.target);
+      });
 
-    dagre.layout(dagreGraph);
+      dagre.layout(dagreGraph);
 
-    const newNodes = nodes.map((node) => {
-      const nodeWithPosition = dagreGraph.node(node.id);
+      const newNodes = nodes.map((node) => {
+        const nodeWithPosition = dagreGraph.node(node.id);
 
-      const newNode = {
-        ...node,
-        position: {
-          x: nodeWithPosition.x - NODE_WIDTH / 2,
-          y: nodeWithPosition.y - NODE_HEIGHT / 2,
-        },
-      };
+        const newNode = {
+          ...node,
+          position: {
+            x: nodeWithPosition.x - NODE_WIDTH / 2,
+            y: nodeWithPosition.y - NODE_HEIGHT / 2,
+          },
+        };
 
-      return newNode;
-    });
+        return newNode;
+      });
 
-    return { nodes: newNodes, edges };
-  }, []);
+      return { nodes: newNodes, edges };
+    },
+    [settings.direction]
+  );
 
   const { nodes, edges } = useMemo(() => {
     if (isLoading) {
@@ -86,10 +88,9 @@ export const GraphComponent = ({ wallets }: Props) => {
 
     return getLayoutedNodesAndEdges(
       Object.values(allNodes).map((node) => node),
-      Object.values(allEdges).map((edge) => edge),
-      direction
+      Object.values(allEdges).map((edge) => edge)
     );
-  }, [wallets, isLoading, populateNodesAndEdges, getLayoutedNodesAndEdges, addressEntries, transactions, direction]);
+  }, [wallets, isLoading, populateNodesAndEdges, getLayoutedNodesAndEdges, addressEntries, transactions]);
 
   if (isLoading) {
     return <>loading..</>;
@@ -109,7 +110,7 @@ export const GraphComponent = ({ wallets }: Props) => {
       panOnScroll={settings.panOnScroll}
       fitView
     >
-      <Controls direction={direction} setDirection={setDirection} />
+      <Controls />
     </ReactFlow>
   );
 };

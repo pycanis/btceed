@@ -1,3 +1,5 @@
+import { SettingsStoreValue } from "./types";
+
 export const GAP_LIMIT = 20;
 
 export const GET_HISTORY = "blockchain.scripthash.get_history";
@@ -12,7 +14,8 @@ export const DB_VERSION = 1;
 export const GET_DB_XPUBS = "xpubs";
 export const GET_DB_SETTINGS = "settings";
 
-export const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS: SettingsStoreValue = {
   panOnScroll: false,
   colorScheme: "system" as const,
+  direction: "TB",
 };

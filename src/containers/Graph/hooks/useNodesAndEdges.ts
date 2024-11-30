@@ -2,7 +2,6 @@ import { Edge } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
 import {
   AddressEntry,
-  Direction,
   AddressNode as IAddressNode,
   PositionlessNode,
   Transaction,
@@ -12,7 +11,7 @@ import {
 
 // TODO: there might be some slight performance optimizations
 
-export const useNodesAndEdges = (direction: Direction) => {
+export const useNodesAndEdges = () => {
   const getSpendingTransactionIds = useCallback(
     (addressEntry: AddressEntry, transactions: Record<string, Transaction>) =>
       addressEntry.transactionIds!.filter((transactionId) =>
@@ -69,7 +68,6 @@ export const useNodesAndEdges = (direction: Direction) => {
               id: address,
               data: {
                 address,
-                direction,
                 spendingTransactionLength: nextLevelAddressEntry
                   ? getSpendingTransactionIds(nextLevelAddressEntry, transactions).length
                   : 0,
@@ -105,7 +103,7 @@ export const useNodesAndEdges = (direction: Direction) => {
 
       populateAddressNodesAndEdges(nodes, edges, nextLevelAddressEntries, addressEntries, transactions);
     },
-    [getSpendingTransactionIds, direction]
+    [getSpendingTransactionIds]
   );
 
   const getXpubAddressesNodesAndEdges = useCallback(
@@ -128,7 +126,6 @@ export const useNodesAndEdges = (direction: Direction) => {
           id: addressEntry.address,
           data: {
             address: addressEntry.address,
-            direction,
             spendingTransactionLength: getSpendingTransactionIds(addressEntry, transactions).length,
             type: adjacentAddressEntry ? "changeAddress" : "xpubAddress",
           },
@@ -151,7 +148,7 @@ export const useNodesAndEdges = (direction: Direction) => {
 
       return xpubAddressEntries;
     },
-    [getSpendingTransactionIds, direction]
+    [getSpendingTransactionIds]
   );
 
   const populateNodesAndEdges = useCallback(
@@ -167,7 +164,7 @@ export const useNodesAndEdges = (direction: Direction) => {
 
       const xpubNode: Omit<XpubNodeType, "position"> = {
         id: xpub,
-        data: { xpub, direction },
+        data: { xpub },
         type: "xpubNode",
       };
 
@@ -184,7 +181,7 @@ export const useNodesAndEdges = (direction: Direction) => {
 
       populateAddressNodesAndEdges(nodes, edges, xpubAddressEntries, addressEntries, transactions);
     },
-    [getXpubAddressesNodesAndEdges, populateAddressNodesAndEdges, direction]
+    [getXpubAddressesNodesAndEdges, populateAddressNodesAndEdges]
   );
 
   return useMemo(() => ({ populateNodesAndEdges }), [populateNodesAndEdges]);
