@@ -15,7 +15,7 @@ export const ChoiceInput = ({ name, options, label, optionWidth, className }: Pr
 
   return (
     <div className={className}>
-      <p>{label}</p>
+      <p className="mb-2">{label}</p>
 
       <div className="flex w-fit rounded-xl overflow-hidden border border-primary dark:border-darkPrimary">
         {options.map((option) => (

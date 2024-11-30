@@ -5,6 +5,7 @@ import { useFormContext } from "react-hook-form";
 import { TypeOf, z } from "zod";
 import { ChoiceInput } from "../../../components/ChoiceInput";
 import { Form } from "../../../components/Form";
+import { Input } from "../../../components/Input";
 import { Popover } from "../../../components/Popover";
 import { Switch } from "../../../components/Switch";
 import { GET_DB_SETTINGS } from "../../../constants";
@@ -28,6 +29,7 @@ const schema = z.object({
     z.literal<Direction>("BT"),
     z.literal<Direction>("RL"),
   ]),
+  spacing: z.number().min(50).max(500),
 });
 
 type FormValues = TypeOf<typeof schema>;
@@ -92,7 +94,7 @@ const FormFields = () => {
       <ChoiceInput
         name="direction"
         label="Direction"
-        className="mt-2"
+        className="my-2"
         optionWidth="w-10"
         options={[
           { label: "↓", value: "TB" },
@@ -100,6 +102,16 @@ const FormFields = () => {
           { label: "↑", value: "BT" },
           { label: "←", value: "RL" },
         ]}
+      />
+
+      <Input
+        name="spacing"
+        type="range"
+        label="Spacing"
+        registerOptions={{ valueAsNumber: true }}
+        min={50}
+        max={500}
+        step={10}
       />
     </>
   );

@@ -16,6 +16,7 @@ export const GET_DB_SETTINGS = "settings";
 
 export const DEFAULT_SETTINGS: SettingsStoreValue = {
   panOnScroll: false,
-  colorScheme: "system" as const,
+  colorScheme: "system",
   direction: "TB",
+  spacing: 200,
 };

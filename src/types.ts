@@ -85,7 +85,12 @@ export type ColorScheme = "light" | "dark" | "system";
 
 export type XpubStoreValue = { xpub: string; scriptType: ScriptType; createdAt: number; label?: string };
 
-export type SettingsStoreValue = { panOnScroll: boolean; colorScheme: ColorScheme; direction: Direction };
+export type SettingsStoreValue = {
+  panOnScroll: boolean;
+  colorScheme: ColorScheme;
+  direction: Direction;
+  spacing: number;
+};
 
 export interface DatabaseSchema extends DBSchema {
   xpubs: { key: string; value: XpubStoreValue; indexes: { createdAt: number } };
