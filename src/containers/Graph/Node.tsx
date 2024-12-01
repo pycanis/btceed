@@ -1,16 +1,17 @@
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { ReactNode, useCallback, useMemo } from "react";
+import { CSSProperties, ReactNode, useCallback, useMemo } from "react";
 import { useSettingsContext } from "../../contexts/SettingsContext";
-import { AddressNodeType, Direction, AddressNode as IAddressNode, XpubNode as XpubNodeType } from "../../types";
+import { Direction, AddressNode as IAddressNode, XpubNode as XpubNodeType } from "../../types";
 import { getBothSideSubstring } from "../../utils/strings";
 import { useGraphContext } from "./GraphContext";
 
 type Props = {
   id: string;
-  className?: string;
   children: ReactNode;
+  style: CSSProperties;
 };
-const BaseNode = ({ id, className, children }: Props) => {
+
+const BaseNode = ({ id, children, style }: Props) => {
   const { setHoveredNodeId } = useGraphContext();
 
   const handleMouseEnter = useCallback(() => setHoveredNodeId(id), [id, setHoveredNodeId]);
@@ -18,7 +19,8 @@ const BaseNode = ({ id, className, children }: Props) => {
 
   return (
     <div
-      className={"w-24 h-6 rounded-lg text-xs flex justify-center items-center".concat(" ", className || "")}
+      className="w-28 h-6 rounded-md text-xs font-bold flex justify-center items-center border-2 border-text dark:border-darkText"
+      style={style}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -41,8 +43,9 @@ const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
   );
 
   return (
-    <BaseNode id={id} className="bg-green-400 h-6">
+    <BaseNode id={id} style={{ backgroundColor: settings.nodeColors.xpubNode }}>
       <p>{getBothSideSubstring(data.xpub)}</p>
+
       <Handle type="source" position={handleDirectionMap[settings.direction]} id={id} />
     </BaseNode>
   );
@@ -69,17 +72,10 @@ const AddressNode = ({ id, data }: NodeProps<IAddressNode>) => {
     []
   );
 
-  const addressNodeTypeMap = useMemo<Record<AddressNodeType, string>>(
-    () => ({
-      changeAddress: "bg-red-400",
-      externalAddress: "bg-gray-400",
-      xpubAddress: "bg-yellow-400",
-    }),
-    []
-  );
+  const backgroundColor = useMemo(() => settings.nodeColors[data.type], [settings.nodeColors, data.type]);
 
   return (
-    <BaseNode id={id} className={`${addressNodeTypeMap[data.type]}`}>
+    <BaseNode id={id} style={{ backgroundColor }}>
       <p>{getBothSideSubstring(data.address)}</p>
 
       {data.spendingTransactionLength > 0 && (

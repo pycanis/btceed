@@ -83,6 +83,13 @@ export type Wallet = {
 
 export type ColorScheme = "light" | "dark" | "system";
 
+export type NodeColors = {
+  xpubNode: string;
+  xpubAddress: string;
+  changeAddress: string;
+  externalAddress: string;
+};
+
 export type XpubStoreValue = { xpub: string; scriptType: ScriptType; createdAt: number; label?: string };
 
 export type SettingsStoreValue = {
@@ -90,6 +97,7 @@ export type SettingsStoreValue = {
   colorScheme: ColorScheme;
   direction: Direction;
   spacing: number;
+  nodeColors: NodeColors;
 };
 
 export interface DatabaseSchema extends DBSchema {

@@ -4,6 +4,7 @@ import { useCallback, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { TypeOf, z } from "zod";
 import { ChoiceInput } from "../../../components/ChoiceInput";
+import { ColorInput } from "../../../components/ColorInput";
 import { Form } from "../../../components/Form";
 import { Input } from "../../../components/Input";
 import { Popover } from "../../../components/Popover";
@@ -30,6 +31,12 @@ const schema = z.object({
     z.literal<Direction>("RL"),
   ]),
   spacing: z.number().min(50).max(500),
+  nodeColors: z.object({
+    xpubNode: z.string(),
+    xpubAddress: z.string(),
+    changeAddress: z.string(),
+    externalAddress: z.string(),
+  }),
 });
 
 type FormValues = TypeOf<typeof schema>;
@@ -113,6 +120,11 @@ const FormFields = () => {
         max={500}
         step={10}
       />
+
+      <ColorInput name="nodeColors.xpubNode" type="color" label="Xpub node" className="mb-2" />
+      <ColorInput name="nodeColors.xpubAddress" type="color" label="Xpub address" className="mb-2" />
+      <ColorInput name="nodeColors.changeAddress" type="color" label="Change address" className="mb-2" />
+      <ColorInput name="nodeColors.externalAddress" type="color" label="External address" />
     </>
   );
 };

@@ -1,7 +1,6 @@
 import dagre from "@dagrejs/dagre";
 import { Edge, ReactFlow } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
-import { NODE_HEIGHT, NODE_WIDTH } from "../../constants";
 import { useSettingsContext } from "../../contexts/SettingsContext";
 import { AddressEntry, PositionlessNode, Wallet } from "../../types";
 import { Controls } from "./Controls/Controls";
@@ -29,7 +28,7 @@ export const GraphComponent = ({ wallets }: Props) => {
       dagreGraph.setGraph({ rankdir: settings.direction, ranksep: settings.spacing });
 
       nodes.forEach((node) => {
-        dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+        dagreGraph.setNode(node.id, { width: 70 });
       });
 
       edges.forEach((edge) => {
@@ -44,8 +43,8 @@ export const GraphComponent = ({ wallets }: Props) => {
         const newNode = {
           ...node,
           position: {
-            x: nodeWithPosition.x - NODE_WIDTH / 2,
-            y: nodeWithPosition.y - NODE_HEIGHT / 2,
+            x: nodeWithPosition.x,
+            y: nodeWithPosition.y,
           },
         };
 
