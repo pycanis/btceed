@@ -10,6 +10,7 @@ import { useNodesAndEdges } from "./hooks/useNodesAndEdges";
 import { nodeTypes } from "./Node";
 
 import "@xyflow/react/dist/style.css";
+import { edgeTypes } from "./Edge";
 
 type Props = {
   wallets: Wallet[];
@@ -101,6 +102,7 @@ export const GraphComponent = ({ wallets }: Props) => {
       nodes={nodes}
       edges={edges}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       proOptions={{ hideAttribution: true }}
       nodesDraggable={false}
       nodesConnectable={false}

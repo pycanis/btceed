@@ -82,10 +82,11 @@ export const useNodesAndEdges = () => {
               nodes[node.id] = node;
             }
 
-            const edge = {
+            const edge: Edge = {
               id: `${addressEntry.address}-${node.id}`,
               source: addressEntry.address,
               target: node.id,
+              type: "customEdge",
             };
 
             const existingEdge = edges[edge.id];
@@ -132,11 +133,12 @@ export const useNodesAndEdges = () => {
           type: "addressNode",
         };
 
-        const edge = {
+        const edge: Edge = {
           id: `${xpubNode.id}-${node.id}`,
           source: xpubNode.id,
           target: node.id,
           animated: !!adjacentAddressEntry,
+          type: "customEdge",
         };
 
         if (!adjacentAddressEntry) {

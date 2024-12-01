@@ -5,6 +5,7 @@ import { useDatabaseContext } from "../../contexts/DatabaseContext";
 import { getWallet } from "../../utils/wallet";
 import { XpubFormModal } from "../XpubFormModal";
 import { GraphComponent } from "./GraphComponent";
+import { GraphProvider } from "./GraphContext";
 
 export const Graph = () => {
   const { db } = useDatabaseContext();
@@ -22,7 +23,9 @@ export const Graph = () => {
 
   return (
     <>
-      <GraphComponent wallets={wallets} />
+      <GraphProvider>
+        <GraphComponent wallets={wallets} />
+      </GraphProvider>
 
       {wallets.length === 0 && <XpubFormModal />}
     </>

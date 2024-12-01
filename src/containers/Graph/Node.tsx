@@ -1,10 +1,31 @@
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { useMemo } from "react";
+import { ReactNode, useCallback, useMemo } from "react";
 import { useSettingsContext } from "../../contexts/SettingsContext";
 import { AddressNodeType, Direction, AddressNode as IAddressNode, XpubNode as XpubNodeType } from "../../types";
 import { getBothSideSubstring } from "../../utils/strings";
+import { useGraphContext } from "./GraphContext";
 
-const nodeWrapperStyles = "w-24 h-6 rounded-lg text-xs flex justify-center items-center";
+type Props = {
+  id: string;
+  className?: string;
+  children: ReactNode;
+};
+const BaseNode = ({ id, className, children }: Props) => {
+  const { setHoveredNodeId } = useGraphContext();
+
+  const handleMouseEnter = useCallback(() => setHoveredNodeId(id), [id, setHoveredNodeId]);
+  const handleMouseLeave = useCallback(() => setHoveredNodeId(null), [setHoveredNodeId]);
+
+  return (
+    <div
+      className={"w-24 h-6 rounded-lg text-xs flex justify-center items-center".concat(" ", className || "")}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+    </div>
+  );
+};
 
 const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
   const { settings } = useSettingsContext();
@@ -20,10 +41,10 @@ const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
   );
 
   return (
-    <div className={`${nodeWrapperStyles} bg-green-400 h-6`}>
+    <BaseNode id={id} className="bg-green-400 h-6">
       <p>{getBothSideSubstring(data.xpub)}</p>
       <Handle type="source" position={handleDirectionMap[settings.direction]} id={id} />
-    </div>
+    </BaseNode>
   );
 };
 
@@ -58,7 +79,7 @@ const AddressNode = ({ id, data }: NodeProps<IAddressNode>) => {
   );
 
   return (
-    <div className={`${nodeWrapperStyles} ${addressNodeTypeMap[data.type]}`}>
+    <BaseNode id={id} className={`${addressNodeTypeMap[data.type]}`}>
       <p>{getBothSideSubstring(data.address)}</p>
 
       {data.spendingTransactionLength > 0 && (
@@ -66,7 +87,7 @@ const AddressNode = ({ id, data }: NodeProps<IAddressNode>) => {
       )}
 
       <Handle type="target" position={handleDirectionMap.target[settings.direction]} id={id} />
-    </div>
+    </BaseNode>
   );
 };
 
