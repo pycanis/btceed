@@ -1,0 +1,7 @@
+services:
+  app:
+    container_name: btc-viz
+    image: btc-viz
+    build: .
+    ports:
+      - "5234:80"
