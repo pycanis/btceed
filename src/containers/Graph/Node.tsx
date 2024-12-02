@@ -30,7 +30,7 @@ const BaseNode = ({ id, children, style }: Props) => {
 };
 
 const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
-  const { settings } = useSettingsContext();
+  const { settings, isDarkMode } = useSettingsContext();
 
   const handleDirectionMap = useMemo<Record<Direction, Position>>(
     () => ({
@@ -43,7 +43,7 @@ const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
   );
 
   return (
-    <BaseNode id={id} style={{ backgroundColor: settings.nodeColors.xpubNode }}>
+    <BaseNode id={id} style={{ backgroundColor: settings[isDarkMode ? "nodeColorsDark" : "nodeColors"].xpubNode }}>
       <p>{getBothSideSubstring(data.xpub)}</p>
 
       <Handle type="source" position={handleDirectionMap[settings.direction]} id={id} />
@@ -52,7 +52,7 @@ const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
 };
 
 const AddressNode = ({ id, data }: NodeProps<IAddressNode>) => {
-  const { settings } = useSettingsContext();
+  const { settings, isDarkMode } = useSettingsContext();
 
   const handleDirectionMap = useMemo<{ source: Record<Direction, Position>; target: Record<Direction, Position> }>(
     () => ({
@@ -72,7 +72,10 @@ const AddressNode = ({ id, data }: NodeProps<IAddressNode>) => {
     []
   );
 
-  const backgroundColor = useMemo(() => settings.nodeColors[data.type], [settings.nodeColors, data.type]);
+  const backgroundColor = useMemo(
+    () => settings[isDarkMode ? "nodeColorsDark" : "nodeColors"][data.type],
+    [settings, isDarkMode, data.type]
+  );
 
   return (
     <BaseNode id={id} style={{ backgroundColor }}>

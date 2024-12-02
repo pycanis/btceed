@@ -14,9 +14,16 @@ import { DEFAULT_NODE_COLORS_DARK_MODE, DEFAULT_NODE_COLORS_LIGHT_MODE, GET_DB_S
 import { useDatabaseContext } from "../../../contexts/DatabaseContext";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
 import { SettingsIcon } from "../../../icons/Settings";
-import { ColorScheme, Direction } from "../../../types";
+import { ColorScheme, Direction, NodeType } from "../../../types";
 import { ControlButton } from "./ControlButton";
 import { ControlPopoverLayout } from "./ControlPopoverLayout";
+
+const nodeColorsSchema = z.object({
+  xpubNode: z.string(),
+  xpubAddress: z.string(),
+  changeAddress: z.string(),
+  externalAddress: z.string(),
+});
 
 const schema = z.object({
   panOnScroll: z.boolean(),
@@ -32,12 +39,8 @@ const schema = z.object({
     z.literal<Direction>("RL"),
   ]),
   spacing: z.number().min(50).max(500),
-  nodeColors: z.object({
-    xpubNode: z.string(),
-    xpubAddress: z.string(),
-    changeAddress: z.string(),
-    externalAddress: z.string(),
-  }),
+  nodeColors: nodeColorsSchema,
+  nodeColorsDark: nodeColorsSchema,
 });
 
 type FormValues = TypeOf<typeof schema>;
@@ -62,24 +65,80 @@ export const Settings = () => {
   );
 };
 
-const FormFields = () => {
-  const { db } = useDatabaseContext();
-  const queryClient = useQueryClient();
+const ColorField = ({
+  darkField,
+  label,
+  nodeType,
+  handleSetDefaultColor,
+}: {
+  darkField?: boolean;
+  label: string;
+  nodeType: NodeType;
+  handleSetDefaultColor: (nodeType: NodeType) => void;
+}) => {
+  return (
+    <div className="flex mb-2">
+      <ColorInput name={`nodeColors${darkField ? "Dark" : ""}.${nodeType}`} type="color" label={label} />
 
-  const { handleSubmit, watch, setValue } = useFormContext<FormValues>();
+      <Button variant="text" className="ml-2" onClick={() => handleSetDefaultColor(nodeType)}>
+        Default
+      </Button>
+    </div>
+  );
+};
+
+const ColorFields = ({ darkField, className }: { darkField?: boolean; className: string }) => {
+  const { isDarkMode } = useSettingsContext();
+  const { setValue } = useFormContext<FormValues>();
 
   const handleSetDefaultColor = useCallback(
-    (key: "xpubNode" | "xpubAddress" | "changeAddress" | "externalAddress") => {
-      const color = (
-        document.documentElement.classList.contains("dark")
-          ? DEFAULT_NODE_COLORS_DARK_MODE
-          : DEFAULT_NODE_COLORS_LIGHT_MODE
-      )[key];
+    (nodeType: NodeType) => {
+      const color = (isDarkMode ? DEFAULT_NODE_COLORS_DARK_MODE : DEFAULT_NODE_COLORS_LIGHT_MODE)[nodeType];
 
-      setValue(`nodeColors.${key}`, color);
+      setValue(`nodeColors${isDarkMode ? "Dark" : ""}.${nodeType}`, color);
     },
-    [setValue]
+    [setValue, isDarkMode]
   );
+
+  return (
+    <div className={className}>
+      <ColorField
+        darkField={darkField}
+        nodeType="xpubNode"
+        label="Xpub node"
+        handleSetDefaultColor={handleSetDefaultColor}
+      />
+
+      <ColorField
+        darkField={darkField}
+        nodeType="xpubAddress"
+        label="Xpub address"
+        handleSetDefaultColor={handleSetDefaultColor}
+      />
+
+      <ColorField
+        darkField={darkField}
+        nodeType="changeAddress"
+        label="Change address"
+        handleSetDefaultColor={handleSetDefaultColor}
+      />
+
+      <ColorField
+        darkField={darkField}
+        nodeType="externalAddress"
+        label="External address"
+        handleSetDefaultColor={handleSetDefaultColor}
+      />
+    </div>
+  );
+};
+
+const FormFields = () => {
+  const { db } = useDatabaseContext();
+  const { isDarkMode } = useSettingsContext();
+  const queryClient = useQueryClient();
+
+  const { handleSubmit, watch } = useFormContext<FormValues>();
 
   const onSubmit = useCallback(
     async (values: FormValues) => {
@@ -135,37 +194,8 @@ const FormFields = () => {
         step={10}
       />
 
-      <div className="flex mb-2">
-        <ColorInput name="nodeColors.xpubNode" type="color" label="Xpub node" />
-
-        <Button variant="text" className="ml-2" onClick={() => handleSetDefaultColor("xpubNode")}>
-          Default
-        </Button>
-      </div>
-
-      <div className="flex mb-2">
-        <ColorInput name="nodeColors.xpubAddress" type="color" label="Xpub address" />
-
-        <Button variant="text" className="ml-2" onClick={() => handleSetDefaultColor("xpubAddress")}>
-          Default
-        </Button>
-      </div>
-
-      <div className="flex mb-2">
-        <ColorInput name="nodeColors.changeAddress" type="color" label="Change address" />
-
-        <Button variant="text" className="ml-2" onClick={() => handleSetDefaultColor("changeAddress")}>
-          Default
-        </Button>
-      </div>
-
-      <div className="flex mb-2">
-        <ColorInput name="nodeColors.externalAddress" type="color" label="External address" />
-
-        <Button variant="text" className="ml-2" onClick={() => handleSetDefaultColor("externalAddress")}>
-          Default
-        </Button>
-      </div>
+      <ColorFields className={isDarkMode ? "hidden" : ""} />
+      <ColorFields darkField className={isDarkMode ? "" : "hidden"} />
     </>
   );
 };

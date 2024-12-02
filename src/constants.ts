@@ -25,9 +25,11 @@ export const DEFAULT_NODE_COLORS_DARK_MODE = {
   externalAddress: "#4d4b4e",
 };
 
-export const DEFAULT_SETTINGS: Omit<SettingsStoreValue, "nodeColors"> = {
+export const DEFAULT_SETTINGS: SettingsStoreValue = {
   panOnScroll: false,
   colorScheme: "system",
   direction: "TB",
   spacing: 200,
+  nodeColors: DEFAULT_NODE_COLORS_LIGHT_MODE,
+  nodeColorsDark: DEFAULT_NODE_COLORS_DARK_MODE,
 };

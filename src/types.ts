@@ -56,6 +56,8 @@ export type HistoryItem = {
 
 export type PositionlessNode = Omit<Node, "position">;
 
+export type NodeType = "xpubNode" | "xpubAddress" | "changeAddress" | "externalAddress";
+
 export type XpubNode = Node<
   {
     xpub: string;
@@ -98,6 +100,7 @@ export type SettingsStoreValue = {
   direction: Direction;
   spacing: number;
   nodeColors: NodeColors;
+  nodeColorsDark: NodeColors;
 };
 
 export interface DatabaseSchema extends DBSchema {
