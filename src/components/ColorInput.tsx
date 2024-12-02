@@ -15,7 +15,7 @@ export const ColorInput = ({ label, name, registerOptions, className, ...rest }:
       <input
         {...register(name, registerOptions)}
         id={name}
-        className={"w-10 h-10 rounded-full border-2 border-text dark:border-darkText cursor-pointer"}
+        className={"w-10 h-10 rounded-md border-2 border-text dark:border-darkText cursor-pointer"}
         {...rest}
       />
 

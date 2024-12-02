@@ -3,13 +3,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { TypeOf, z } from "zod";
+import { Button } from "../../../components/Button";
 import { ChoiceInput } from "../../../components/ChoiceInput";
 import { ColorInput } from "../../../components/ColorInput";
 import { Form } from "../../../components/Form";
 import { Input } from "../../../components/Input";
 import { Popover } from "../../../components/Popover";
 import { Switch } from "../../../components/Switch";
-import { GET_DB_SETTINGS } from "../../../constants";
+import { DEFAULT_NODE_COLORS_DARK_MODE, DEFAULT_NODE_COLORS_LIGHT_MODE, GET_DB_SETTINGS } from "../../../constants";
 import { useDatabaseContext } from "../../../contexts/DatabaseContext";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
 import { SettingsIcon } from "../../../icons/Settings";
@@ -65,7 +66,20 @@ const FormFields = () => {
   const { db } = useDatabaseContext();
   const queryClient = useQueryClient();
 
-  const { handleSubmit, watch } = useFormContext<FormValues>();
+  const { handleSubmit, watch, setValue } = useFormContext<FormValues>();
+
+  const handleSetDefaultColor = useCallback(
+    (key: "xpubNode" | "xpubAddress" | "changeAddress" | "externalAddress") => {
+      const color = (
+        document.documentElement.classList.contains("dark")
+          ? DEFAULT_NODE_COLORS_DARK_MODE
+          : DEFAULT_NODE_COLORS_LIGHT_MODE
+      )[key];
+
+      setValue(`nodeColors.${key}`, color);
+    },
+    [setValue]
+  );
 
   const onSubmit = useCallback(
     async (values: FormValues) => {
@@ -121,10 +135,37 @@ const FormFields = () => {
         step={10}
       />
 
-      <ColorInput name="nodeColors.xpubNode" type="color" label="Xpub node" className="mb-2" />
-      <ColorInput name="nodeColors.xpubAddress" type="color" label="Xpub address" className="mb-2" />
-      <ColorInput name="nodeColors.changeAddress" type="color" label="Change address" className="mb-2" />
-      <ColorInput name="nodeColors.externalAddress" type="color" label="External address" />
+      <div className="flex mb-2">
+        <ColorInput name="nodeColors.xpubNode" type="color" label="Xpub node" />
+
+        <Button variant="text" className="ml-2" onClick={() => handleSetDefaultColor("xpubNode")}>
+          Default
+        </Button>
+      </div>
+
+      <div className="flex mb-2">
+        <ColorInput name="nodeColors.xpubAddress" type="color" label="Xpub address" />
+
+        <Button variant="text" className="ml-2" onClick={() => handleSetDefaultColor("xpubAddress")}>
+          Default
+        </Button>
+      </div>
+
+      <div className="flex mb-2">
+        <ColorInput name="nodeColors.changeAddress" type="color" label="Change address" />
+
+        <Button variant="text" className="ml-2" onClick={() => handleSetDefaultColor("changeAddress")}>
+          Default
+        </Button>
+      </div>
+
+      <div className="flex mb-2">
+        <ColorInput name="nodeColors.externalAddress" type="color" label="External address" />
+
+        <Button variant="text" className="ml-2" onClick={() => handleSetDefaultColor("externalAddress")}>
+          Default
+        </Button>
+      </div>
     </>
   );
 };

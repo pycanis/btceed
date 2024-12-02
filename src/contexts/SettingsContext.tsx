@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo } from "react";
-import { DEFAULT_SETTINGS, GET_DB_SETTINGS } from "../constants";
+import {
+  DEFAULT_NODE_COLORS_DARK_MODE,
+  DEFAULT_NODE_COLORS_LIGHT_MODE,
+  DEFAULT_SETTINGS,
+  GET_DB_SETTINGS,
+} from "../constants";
 import { ColorScheme, SettingsStoreValue } from "../types";
 import { useDatabaseContext } from "./DatabaseContext";
 
@@ -22,7 +27,16 @@ export const SettingsProvider = ({ children }: Props) => {
     queryFn: () => db!.getAll("settings"),
   });
 
-  const settings = useMemo(() => settingsData?.[0] || DEFAULT_SETTINGS, [settingsData]);
+  const settings = useMemo(
+    () =>
+      settingsData?.[0] || {
+        ...DEFAULT_SETTINGS,
+        nodeColors: document.documentElement.classList.contains("dark")
+          ? DEFAULT_NODE_COLORS_DARK_MODE
+          : DEFAULT_NODE_COLORS_LIGHT_MODE,
+      },
+    [settingsData]
+  );
 
   const handleColorSchemeChange = useCallback((isDark: boolean, colorScheme: ColorScheme) => {
     document.documentElement.classList.toggle("dark", colorScheme === "dark" || (colorScheme === "system" && isDark));

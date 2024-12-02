@@ -12,7 +12,7 @@ export default {
         bg: "#FFEFD5",
         text: "#3D2B1F",
         darkPrimary: "#FFB70F",
-        darkBg: "#291900",
+        darkBg: "#030843",
         darkText: "#E0CEC2"
       }
     },
