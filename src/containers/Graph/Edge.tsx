@@ -1,7 +1,7 @@
 import { BaseEdge, EdgeProps, getBezierPath } from "@xyflow/react";
 import { useGraphContext } from "./GraphContext";
 
-const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY }: EdgeProps) => {
+export const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY }: EdgeProps) => {
   const { hoveredNodeId } = useGraphContext();
 
   const [edgePath] = getBezierPath({
@@ -19,5 +19,3 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY }: EdgeProps) => {
     />
   );
 };
-
-export const edgeTypes = { customEdge: CustomEdge };

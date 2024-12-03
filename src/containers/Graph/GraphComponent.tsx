@@ -4,12 +4,13 @@ import { useCallback, useMemo } from "react";
 import { useSettingsContext } from "../../contexts/SettingsContext";
 import { AddressEntry, PositionlessNode, Wallet } from "../../types";
 import { Controls } from "./Controls/Controls";
+import { CustomEdge } from "./Edge";
 import { useAddressEntriesAndTransactions } from "./hooks/useAddressEntriesAndTransactions";
 import { useNodesAndEdges } from "./hooks/useNodesAndEdges";
-import { nodeTypes } from "./Node";
+import { AddressNode } from "./Node/AddressNode";
+import { XpubNode } from "./Node/XpubNode";
 
 import "@xyflow/react/dist/style.css";
-import { edgeTypes } from "./Edge";
 
 type Props = {
   wallets: Wallet[];
@@ -100,8 +101,8 @@ export const GraphComponent = ({ wallets }: Props) => {
     <ReactFlow
       nodes={nodes}
       edges={edges}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
+      nodeTypes={{ xpubNode: XpubNode, addressNode: AddressNode }}
+      edgeTypes={{ customEdge: CustomEdge }}
       proOptions={{ hideAttribution: true }}
       nodesDraggable={false}
       nodesConnectable={false}
