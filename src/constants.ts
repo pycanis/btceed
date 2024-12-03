@@ -1,4 +1,4 @@
-import { SettingsStoreValue } from "./types";
+import { ScriptType, SettingsStoreValue } from "./types";
 
 export const GAP_LIMIT = 20;
 
@@ -32,4 +32,10 @@ export const DEFAULT_SETTINGS: SettingsStoreValue = {
   spacing: 200,
   nodeColors: DEFAULT_NODE_COLORS_LIGHT_MODE,
   nodeColorsDark: DEFAULT_NODE_COLORS_DARK_MODE,
+};
+
+export const SCRIPT_DERIVATION_PATH_BASE: Record<ScriptType, string> = {
+  P2PKH: "m/44'/0'/0'",
+  P2WPKH: "m/84'/0'/0'",
+  P2TR: "m/86'/0'/0'",
 };

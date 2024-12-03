@@ -1,20 +1,29 @@
+import { Placement } from "@popperjs/core";
 import { ReactNode, useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePopper } from "react-popper";
 
 type Props = {
   children: ReactNode;
   triggerNode: ReactNode;
+  closeOnClickOutside?: boolean;
+  placement?: Placement;
 };
 
-export const Popover = ({ triggerNode, children }: Props) => {
+export const Popover = ({ triggerNode, children, closeOnClickOutside = true, placement }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [triggerElement, setTriggerElement] = useState<HTMLDivElement | null>(null);
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null);
-  const { styles, attributes } = usePopper(triggerElement, popperElement, { placement: "left-start" });
+
+  const { styles, attributes } = usePopper(triggerElement, popperElement, {
+    placement,
+    modifiers: [{ name: "offset", options: { offset: [0, 5] } }],
+  });
 
   const handleClickOutside = useCallback(
     (event: MouseEvent) => {
       if (
+        closeOnClickOutside &&
         popperElement &&
         !popperElement.contains(event.target as Node) &&
         triggerElement &&
@@ -23,7 +32,7 @@ export const Popover = ({ triggerNode, children }: Props) => {
         setIsOpen(false);
       }
     },
-    [popperElement, triggerElement]
+    [popperElement, triggerElement, closeOnClickOutside]
   );
 
   const handleKeydown = useCallback((event: KeyboardEvent) => {
@@ -53,11 +62,13 @@ export const Popover = ({ triggerNode, children }: Props) => {
         {triggerNode}
       </div>
 
-      {isOpen && (
-        <div ref={setPopperElement} className="w-fit" style={styles.popper} {...attributes.popper}>
-          {children}
-        </div>
-      )}
+      {isOpen &&
+        createPortal(
+          <div ref={setPopperElement} className="w-fit" style={styles.popper} {...attributes.popper}>
+            {children}
+          </div>,
+          document.querySelector("#popover") as Element
+        )}
     </>
   );
 };

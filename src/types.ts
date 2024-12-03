@@ -60,7 +60,7 @@ export type NodeType = "xpubNode" | "xpubAddress" | "changeAddress" | "externalA
 
 export type XpubNode = Node<
   {
-    xpub: string;
+    wallet: Wallet;
   },
   "xpubNode"
 >;
@@ -68,8 +68,11 @@ export type XpubNode = Node<
 export type AddressNode = Node<
   {
     address: string;
+    isChange?: boolean;
+    index?: number;
     type: AddressNodeType;
-    spendingTransactionLength: number;
+    wallet: Wallet;
+    transactions: Transaction[];
   },
   "addressNode"
 >;

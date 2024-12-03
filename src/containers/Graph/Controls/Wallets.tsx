@@ -35,6 +35,7 @@ export const Wallets = () => {
   return (
     <>
       <Popover
+        placement="left-start"
         triggerNode={
           <ControlButton>
             <WalletIcon />

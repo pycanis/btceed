@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { MutableRefObject, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import useWebSocket, { Options } from "react-use-websocket";
 import { GAP_LIMIT, GET_DB_XPUBS, GET_HISTORY, GET_TRANSACTION } from "../../../constants";
+import { useConfigContext } from "../../../contexts/ConfigContext";
 import { useDatabaseContext } from "../../../contexts/DatabaseContext";
-import { useElectrumContext } from "../../../contexts/ElectrumContext";
 import { AddressEntry, HistoryItem, Transaction, Wallet } from "../../../types";
 import { getWallet } from "../../../utils/wallet";
 import { useAddressService } from "./useAddressService";
@@ -174,7 +174,7 @@ const reducer = (state: State, action: Action): State => {
 
 export const useAddressEntriesAndTransactions = () => {
   const { db } = useDatabaseContext();
-  const { electrumUrl } = useElectrumContext();
+  const { electrumUrl } = useConfigContext();
   const { deriveAddressRange } = useAddressService();
 
   const { data: xpubStoreValues = [] } = useQuery({

@@ -50,6 +50,7 @@ export const Settings = () => {
 
   return (
     <Popover
+      placement="left-start"
       triggerNode={
         <ControlButton>
           <SettingsIcon />
@@ -160,18 +161,6 @@ const FormFields = () => {
       <Switch name="panOnScroll" label="Figma-like controls" />
 
       <ChoiceInput
-        name="colorScheme"
-        label="Color scheme"
-        className="mt-2"
-        optionWidth="w-20"
-        options={[
-          { label: "Light", value: "light" },
-          { label: "Dark", value: "dark" },
-          { label: "System", value: "system" },
-        ]}
-      />
-
-      <ChoiceInput
         name="direction"
         label="Direction"
         className="my-2"
@@ -194,8 +183,19 @@ const FormFields = () => {
         step={10}
       />
 
-      <ColorFields className={isDarkMode ? "hidden" : ""} />
-      <ColorFields darkField className={isDarkMode ? "" : "hidden"} />
+      <ChoiceInput
+        name="colorScheme"
+        label="Color scheme"
+        optionWidth="w-20"
+        options={[
+          { label: "Light", value: "light" },
+          { label: "Dark", value: "dark" },
+          { label: "System", value: "system" },
+        ]}
+      />
+
+      <ColorFields className={isDarkMode ? "hidden" : "mt-4"} />
+      <ColorFields darkField className={isDarkMode ? "mt-4" : "hidden"} />
     </>
   );
 };
