@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { GET_DB_XPUBS } from "../../constants";
 import { useDatabaseContext } from "../../contexts/DatabaseContext";
+import { GraphProvider } from "../../contexts/GraphContext/GraphContext";
 import { getWallet } from "../../utils/wallet";
 import { XpubFormModal } from "../XpubFormModal";
 import { GraphComponent } from "./GraphComponent";
-import { GraphProvider } from "./GraphContext";
 
 export const Graph = () => {
   const { db } = useDatabaseContext();

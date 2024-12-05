@@ -1,10 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { MutableRefObject, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import useWebSocket, { Options } from "react-use-websocket";
-import { GAP_LIMIT, GET_DB_XPUBS, GET_HISTORY, GET_TRANSACTION, VITE_ELECTRUM_WS_SERVER_URL } from "../../../constants";
-import { useDatabaseContext } from "../../../contexts/DatabaseContext";
+import {
+  GAP_LIMIT,
+  GET_DB_XPUBS,
+  GET_HISTORY,
+  GET_TRANSACTION,
+  SATS_IN_BTC,
+  VITE_ELECTRUM_WS_SERVER_URL,
+} from "../../../constants";
 import { AddressEntry, HistoryItem, Transaction, Wallet } from "../../../types";
 import { getWallet } from "../../../utils/wallet";
+import { useDatabaseContext } from "../../DatabaseContext";
 import { useAddressService } from "./useAddressService";
 
 type XpubLastActiveIndexes = Record<string, { receive: number; change: number }>;
@@ -354,12 +361,34 @@ export const useAddressEntriesAndTransactions = () => {
     [addressesLoaded, state]
   );
 
+  const calculateTransactionFeeInSats = useCallback(
+    (transaction: Transaction, xpub: string) => {
+      const inputsValue = transaction.vin
+        .flatMap((vin) =>
+          state.transactions[vin.txid].vout
+            .filter((vout) => {
+              const addressEntry = state.addressEntries[vout.scriptPubKey.address];
+
+              return addressEntry && addressEntry.xpub === xpub && vout.n === vin.vout;
+            })
+            .map((vout) => vout.value)
+        )
+        .reduce((sum, value) => sum + Math.round(value * SATS_IN_BTC), 0);
+
+      const outputsValue = transaction.vout.reduce((sum, vout) => sum + Math.round(vout.value * SATS_IN_BTC), 0);
+
+      return inputsValue - outputsValue;
+    },
+    [state]
+  );
+
   return useMemo(
     () => ({
       addressEntries: state.addressEntries,
       transactions: state.transactions,
+      calculateTransactionFeeInSats,
       isLoading: !addressesLoaded || !transactionsLoaded || !initialTransactionsLoaded,
     }),
-    [state, addressesLoaded, transactionsLoaded, initialTransactionsLoaded]
+    [state, addressesLoaded, transactionsLoaded, initialTransactionsLoaded, calculateTransactionFeeInSats]
   );
 };

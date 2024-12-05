@@ -94,7 +94,11 @@ export const AddressNode = ({ id, data }: NodeProps<AddressNodeType>) => {
             <p className="mt-2">Spent as part of</p>
 
             {spentTransactions.map((transaction) => (
-              <TransactionRow key={transaction.txid} transaction={transaction} />
+              <TransactionRow
+                key={transaction.txid}
+                transaction={transaction}
+                xpub={data.wallet.hdKey.publicExtendedKey}
+              />
             ))}
           </>
         )}

@@ -1,5 +1,5 @@
 import { CSSProperties, ReactNode, useCallback } from "react";
-import { useGraphContext } from "../GraphContext";
+import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 
 type Props = {
   id: string;

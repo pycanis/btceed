@@ -1,11 +1,11 @@
 import { Edge } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
 import { SATS_IN_BTC } from "../../../constants";
+import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 import {
   AddressEntry,
   AddressNode as IAddressNode,
   PositionlessNode,
-  Transaction,
   Wallet,
   XpubNode as XpubNodeType,
 } from "../../../types";
@@ -13,14 +13,16 @@ import {
 // TODO: there might be some slight performance optimizations
 
 export const useNodesAndEdges = () => {
+  const {
+    addressEntriesAndTransactions: { transactions, addressEntries, calculateTransactionFeeInSats },
+  } = useGraphContext();
+
   const populateAddressNodesAndEdges = useCallback(
     (
       wallet: Wallet,
       nodes: Record<string, PositionlessNode>,
       edges: Record<string, Edge>,
-      currentLevelAddressEntries: AddressEntry[],
-      addressEntries: Record<string, AddressEntry>,
-      transactions: Record<string, Transaction>
+      currentLevelAddressEntries: AddressEntry[]
     ) => {
       if (currentLevelAddressEntries.length === 0) {
         return;
@@ -92,9 +94,9 @@ export const useNodesAndEdges = () => {
         }
       }
 
-      populateAddressNodesAndEdges(wallet, nodes, edges, nextLevelAddressEntries, addressEntries, transactions);
+      populateAddressNodesAndEdges(wallet, nodes, edges, nextLevelAddressEntries);
     },
-    []
+    [transactions, addressEntries]
   );
 
   const getXpubAddressesNodesAndEdges = useCallback(
@@ -103,8 +105,6 @@ export const useNodesAndEdges = () => {
       nodes: Record<string, PositionlessNode>,
       edges: Record<string, Edge>,
       xpubNode: Omit<XpubNodeType, "position">,
-      addressEntries: Record<string, AddressEntry>,
-      transactions: Record<string, Transaction>,
       adjacentAddressEntries: Record<string, AddressEntry>
     ) => {
       const xpubAddressEntries = Object.values(addressEntries).filter(
@@ -148,7 +148,7 @@ export const useNodesAndEdges = () => {
 
       return xpubAddressEntries;
     },
-    []
+    [transactions, addressEntries]
   );
 
   const populateNodesAndEdges = useCallback(
@@ -156,8 +156,6 @@ export const useNodesAndEdges = () => {
       wallet: Wallet,
       nodes: Record<string, PositionlessNode>,
       edges: Record<string, Edge>,
-      addressEntries: Record<string, AddressEntry>,
-      transactions: Record<string, Transaction>,
       adjacentAddressEntries: Record<string, AddressEntry>
     ) => {
       const xpub = wallet.hdKey.publicExtendedKey;
@@ -185,27 +183,13 @@ export const useNodesAndEdges = () => {
           );
 
           if (isSpendingTransaction) {
-            const inputsValue = transaction.vin
-              .flatMap((vin) =>
-                transactions[vin.txid].vout
-                  .filter((vout) => {
-                    const addressEntry = addressEntries[vout.scriptPubKey.address];
-
-                    return addressEntry && addressEntry.xpub === xpub && vout.n === vin.vout;
-                  })
-                  .map((vout) => vout.value)
-              )
-              .reduce((sum, value) => sum + Math.round(value * SATS_IN_BTC), 0);
-
-            const outputsValue = transaction.vout.reduce((sum, vout) => sum + Math.round(vout.value * SATS_IN_BTC), 0);
-
             spent = transaction.vout.reduce((sum, vout) => {
               const addressEntry = addressEntries[vout.scriptPubKey.address];
 
               return addressEntry && addressEntry.xpub === xpub ? sum : sum + Math.round(vout.value * SATS_IN_BTC);
             }, 0);
 
-            fee = inputsValue - outputsValue;
+            fee = calculateTransactionFeeInSats(transaction, xpub);
           } else {
             received = transaction.vout.reduce((sum, vout) => {
               const addressEntry = addressEntries[vout.scriptPubKey.address];
@@ -232,19 +216,17 @@ export const useNodesAndEdges = () => {
 
       nodes[xpubNode.id] = xpubNode;
 
-      const xpubAddressEntries = getXpubAddressesNodesAndEdges(
-        wallet,
-        nodes,
-        edges,
-        xpubNode,
-        addressEntries,
-        transactions,
-        adjacentAddressEntries
-      );
+      const xpubAddressEntries = getXpubAddressesNodesAndEdges(wallet, nodes, edges, xpubNode, adjacentAddressEntries);
 
-      populateAddressNodesAndEdges(wallet, nodes, edges, xpubAddressEntries, addressEntries, transactions);
+      populateAddressNodesAndEdges(wallet, nodes, edges, xpubAddressEntries);
     },
-    [getXpubAddressesNodesAndEdges, populateAddressNodesAndEdges]
+    [
+      getXpubAddressesNodesAndEdges,
+      populateAddressNodesAndEdges,
+      calculateTransactionFeeInSats,
+      transactions,
+      addressEntries,
+    ]
   );
 
   return useMemo(() => ({ populateNodesAndEdges }), [populateNodesAndEdges]);

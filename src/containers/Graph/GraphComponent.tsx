@@ -1,11 +1,11 @@
 import dagre from "@dagrejs/dagre";
 import { Edge, ReactFlow } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
+import { useGraphContext } from "../../contexts/GraphContext/GraphContext";
 import { useSettingsContext } from "../../contexts/SettingsContext";
 import { AddressEntry, PositionlessNode, Wallet } from "../../types";
 import { Controls } from "./Controls/Controls";
 import { CustomEdge } from "./Edge";
-import { useAddressEntriesAndTransactions } from "./hooks/useAddressEntriesAndTransactions";
 import { useNodesAndEdges } from "./hooks/useNodesAndEdges";
 import { AddressNode } from "./Node/AddressNode";
 import { XpubNode } from "./Node/XpubNode";
@@ -20,7 +20,9 @@ export const GraphComponent = ({ wallets }: Props) => {
   const { settings } = useSettingsContext();
   const { populateNodesAndEdges } = useNodesAndEdges();
 
-  const { addressEntries, transactions, isLoading } = useAddressEntriesAndTransactions();
+  const {
+    addressEntriesAndTransactions: { isLoading, addressEntries, transactions },
+  } = useGraphContext();
 
   const getLayoutedNodesAndEdges = useCallback(
     (nodes: PositionlessNode[], edges: Edge[]) => {
@@ -84,7 +86,7 @@ export const GraphComponent = ({ wallets }: Props) => {
     }, {} as Record<string, AddressEntry>);
 
     for (const wallet of wallets) {
-      populateNodesAndEdges(wallet, allNodes, allEdges, addressEntries, transactions, adjacentAddressEntries);
+      populateNodesAndEdges(wallet, allNodes, allEdges, adjacentAddressEntries);
     }
 
     return getLayoutedNodesAndEdges(
