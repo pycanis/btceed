@@ -61,7 +61,7 @@ export const useNodesAndEdges = () => {
                 index: nextLevelAddressEntry?.index,
                 transactions: nextLevelAddressEntry
                   ? nextLevelAddressEntry.transactionIds!.map((transactionId) => transactions[transactionId])
-                  : [],
+                  : [transactions[transactionId]],
                 wallet,
                 type: nextLevelAddressEntry ? "changeAddress" : "externalAddress",
               },

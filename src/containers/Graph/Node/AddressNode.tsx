@@ -81,7 +81,7 @@ export const AddressNode = ({ id, data }: NodeProps<AddressNodeType>) => {
       >
         {receiveTransactions.length > 0 && (
           <>
-            <p>Received in</p>
+            <p className="mt-2">Received in</p>
 
             {receiveTransactions.map((transaction) => (
               <TransactionRow key={transaction.txid} address={data.address} transaction={transaction} />
