@@ -1,4 +1,4 @@
-let timer: number | undefined = undefined;
+let timer: NodeJS.Timeout | undefined = undefined;
 
 export const debounce = (cb: () => void, delayMs = 300) => {
   clearTimeout(timer);

@@ -1,5 +1,6 @@
 import { Edge } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
+import { SATS_IN_BTC } from "../../../constants";
 import {
   AddressEntry,
   AddressNode as IAddressNode,
@@ -161,23 +162,71 @@ export const useNodesAndEdges = () => {
     ) => {
       const xpub = wallet.hdKey.publicExtendedKey;
 
-      // const {} = Object.values(addressEntries).reduce((totals, addressEntry) => {
-      //   if (addressEntry.xpub !== wallet.hdKey.publicExtendedKey) {
-      //     return totals
-      //   }
+      const xpubTransactionIds = new Set(
+        Object.values(addressEntries)
+          .filter((addressEntry) => addressEntry.xpub === xpub)
+          .flatMap((addressEntry) => addressEntry.transactionIds!)
+      );
 
-      //   for (const transactionId of addressEntry.transactionIds!) {
-      //     const transaction = transactions[transactionId]
+      const totals = Array.from(xpubTransactionIds).reduce(
+        (totals, transactionId) => {
+          let received = 0;
+          let spent = 0;
+          let fee = 0;
 
-      //     const received = transaction.vin.filter(vin => vin.)
-      //   }
+          const transaction = transactions[transactionId];
 
-      //   return totals
-      // }, {totalSpent: 0, totalReceived: 0, transactionsCount: 0})
+          const isSpendingTransaction = transaction.vin.some((vin) =>
+            transactions[vin.txid]?.vout.some((vout) => {
+              const addressEntry = addressEntries[vout.scriptPubKey.address];
+
+              return addressEntry && addressEntry.xpub === xpub && vout.n === vin.vout;
+            })
+          );
+
+          if (isSpendingTransaction) {
+            const inputsValue = transaction.vin
+              .flatMap((vin) =>
+                transactions[vin.txid].vout
+                  .filter((vout) => {
+                    const addressEntry = addressEntries[vout.scriptPubKey.address];
+
+                    return addressEntry && addressEntry.xpub === xpub && vout.n === vin.vout;
+                  })
+                  .map((vout) => vout.value)
+              )
+              .reduce((sum, value) => sum + Math.round(value * SATS_IN_BTC), 0);
+
+            const outputsValue = transaction.vout.reduce((sum, vout) => sum + Math.round(vout.value * SATS_IN_BTC), 0);
+
+            spent = transaction.vout.reduce((sum, vout) => {
+              const addressEntry = addressEntries[vout.scriptPubKey.address];
+
+              return addressEntry && addressEntry.xpub === xpub ? sum : sum + Math.round(vout.value * SATS_IN_BTC);
+            }, 0);
+
+            fee = inputsValue - outputsValue;
+          } else {
+            received = transaction.vout.reduce((sum, vout) => {
+              const addressEntry = addressEntries[vout.scriptPubKey.address];
+
+              return addressEntry && addressEntry.xpub === xpub ? sum + Math.round(vout.value * SATS_IN_BTC) : sum;
+            }, 0);
+          }
+
+          return {
+            totalSpent: totals.totalSpent + spent,
+            totalReceived: totals.totalReceived + received,
+            totalFee: totals.totalFee + fee,
+            transactionsCount: totals.transactionsCount + 1,
+          };
+        },
+        { totalSpent: 0, totalReceived: 0, totalFee: 0, transactionsCount: 0 }
+      );
 
       const xpubNode: Omit<XpubNodeType, "position"> = {
         id: xpub,
-        data: { wallet },
+        data: { wallet, totals },
         type: "xpubNode",
       };
 

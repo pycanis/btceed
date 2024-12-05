@@ -1,6 +1,11 @@
 import { ScriptType, SettingsStoreValue } from "./types";
 
+export const VITE_ELECTRUM_WS_SERVER_URL = import.meta.env.VITE_ELECTRUM_WS_SERVER_URL;
+export const VITE_BLOCKCHAIN_EXPLORER_URL = import.meta.env.VITE_BLOCKCHAIN_EXPLORER_URL;
+
 export const GAP_LIMIT = 20;
+
+export const SATS_IN_BTC = 100000000;
 
 export const GET_HISTORY = "blockchain.scripthash.get_history";
 export const GET_TRANSACTION = "blockchain.transaction.get";

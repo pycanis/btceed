@@ -1,15 +1,13 @@
 import { Link } from "../../../components/Link";
-import { useConfigContext } from "../../../contexts/ConfigContext";
+import { VITE_BLOCKCHAIN_EXPLORER_URL } from "../../../constants";
 import { Transaction } from "../../../types";
 
 type Props = { address?: string; transaction: Transaction };
 
 export const TransactionRow = ({ address, transaction }: Props) => {
-  const { blockExplorerUrl } = useConfigContext();
-
   return (
     <div className="ml-2">
-      <Link href={`${blockExplorerUrl}/tx/${transaction.txid}`} target="_blank">
+      <Link href={`${VITE_BLOCKCHAIN_EXPLORER_URL}/tx/${transaction.txid}`} target="_blank">
         {transaction.txid}
       </Link>{" "}
       on <span className="font-bold">{new Date(transaction.time * 1000).toLocaleString()}</span>
@@ -27,7 +25,7 @@ export const TransactionRow = ({ address, transaction }: Props) => {
               <>
                 {" "}
                 to{" "}
-                <Link href={`${blockExplorerUrl}/address/${vout.scriptPubKey.address}`} target="_blank">
+                <Link href={`${VITE_BLOCKCHAIN_EXPLORER_URL}/address/${vout.scriptPubKey.address}`} target="_blank">
                   {vout.scriptPubKey.address}
                 </Link>
               </>

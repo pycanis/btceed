@@ -2,8 +2,7 @@ import { Handle, NodeProps, Position } from "@xyflow/react";
 import { useMemo } from "react";
 import { Link } from "../../../components/Link";
 import { Popover } from "../../../components/Popover";
-import { SCRIPT_DERIVATION_PATH_BASE } from "../../../constants";
-import { useConfigContext } from "../../../contexts/ConfigContext";
+import { SCRIPT_DERIVATION_PATH_BASE, VITE_BLOCKCHAIN_EXPLORER_URL } from "../../../constants";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
 import { AddressNode as AddressNodeType, Direction } from "../../../types";
 import { getBothSideSubstring } from "../../../utils/strings";
@@ -28,7 +27,6 @@ const handleDirectionMap: { source: Record<Direction, Position>; target: Record<
 
 export const AddressNode = ({ id, data }: NodeProps<AddressNodeType>) => {
   const { settings, isDarkMode } = useSettingsContext();
-  const { blockExplorerUrl } = useConfigContext();
 
   const receiveTransactions = useMemo(
     () =>
@@ -75,7 +73,7 @@ export const AddressNode = ({ id, data }: NodeProps<AddressNodeType>) => {
     >
       <BasePopoverContent
         header={
-          <Link href={`${blockExplorerUrl}/address/${data.address}`} target="_blank" className="text-lg">
+          <Link href={`${VITE_BLOCKCHAIN_EXPLORER_URL}/address/${data.address}`} target="_blank" className="text-lg">
             {data.address}
           </Link>
         }

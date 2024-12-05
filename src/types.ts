@@ -61,6 +61,7 @@ export type NodeType = "xpubNode" | "xpubAddress" | "changeAddress" | "externalA
 export type XpubNode = Node<
   {
     wallet: Wallet;
+    totals: Totals;
   },
   "xpubNode"
 >;
@@ -110,3 +111,5 @@ export interface DatabaseSchema extends DBSchema {
   xpubs: { key: string; value: XpubStoreValue; indexes: { createdAt: number } };
   settings: { key: number; value: SettingsStoreValue };
 }
+
+export type Totals = { totalSpent: number; totalReceived: number; totalFee: number; transactionsCount: number };
