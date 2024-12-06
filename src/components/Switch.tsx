@@ -6,11 +6,11 @@ type Props = {
   label: string;
 } & DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
 
-export const Switch = ({ name, label }: Props) => {
+export const Switch = ({ name, label, className }: Props) => {
   const { register } = useFormContext();
 
   return (
-    <label className="flex items-center cursor-pointer">
+    <label className={"flex items-center cursor-pointer".concat(" ", className || "")}>
       <input {...register(name)} type="checkbox" className="sr-only peer" />
       <div
         className={`relative w-11 h-6 peer-focus:ring-1 peer-focus:ring-primary dark:peer-focus:ring-darkPrimary

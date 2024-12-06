@@ -28,7 +28,11 @@ export const GraphComponent = ({ wallets }: Props) => {
     (nodes: PositionlessNode[], edges: Edge[]) => {
       const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
 
-      dagreGraph.setGraph({ rankdir: settings.direction, ranksep: settings.spacing });
+      dagreGraph.setGraph({
+        rankdir: settings.direction,
+        ranksep: settings.graphSpacing,
+        nodesep: settings.nodeSpacing,
+      });
 
       nodes.forEach((node) => {
         dagreGraph.setNode(node.id, { width: 70 });
@@ -56,7 +60,7 @@ export const GraphComponent = ({ wallets }: Props) => {
 
       return { nodes: newNodes, edges };
     },
-    [settings.direction, settings.spacing]
+    [settings.direction, settings.graphSpacing, settings.nodeSpacing]
   );
 
   const { nodes, edges } = useMemo(() => {

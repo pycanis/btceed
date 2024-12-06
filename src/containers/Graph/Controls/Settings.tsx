@@ -38,9 +38,12 @@ const schema = z.object({
     z.literal<Direction>("BT"),
     z.literal<Direction>("RL"),
   ]),
-  spacing: z.number().min(50).max(500),
+  graphSpacing: z.number().min(50).max(500),
   nodeColors: nodeColorsSchema,
   nodeColorsDark: nodeColorsSchema,
+  valuesInSats: z.boolean(),
+  showAddressesWithoutTransactions: z.boolean(),
+  nodeSpacing: z.number().min(50).max(500),
 });
 
 type FormValues = TypeOf<typeof schema>;
@@ -157,7 +160,11 @@ const FormFields = () => {
   }, [handleSubmit, watch, onSubmit]);
 
   return (
-    <>
+    <div className="max-w-96">
+      <Switch name="valuesInSats" label="Display values in sats" />
+
+      <Switch name="showAddressesWithoutTransactions" label="Display addresses without transactions" className="my-4" />
+
       <Switch name="panOnScroll" label="Figma-like controls" />
 
       <ChoiceInput
@@ -174,9 +181,19 @@ const FormFields = () => {
       />
 
       <Input
-        name="spacing"
+        name="graphSpacing"
         type="range"
-        label="Spacing"
+        label="Graph spacing"
+        registerOptions={{ valueAsNumber: true }}
+        min={50}
+        max={500}
+        step={10}
+      />
+
+      <Input
+        name="nodeSpacing"
+        type="range"
+        label="Node spacing"
         registerOptions={{ valueAsNumber: true }}
         min={50}
         max={500}
@@ -196,6 +213,6 @@ const FormFields = () => {
 
       <ColorFields className={isDarkMode ? "hidden" : "mt-4"} />
       <ColorFields darkField className={isDarkMode ? "mt-4" : "hidden"} />
-    </>
+    </div>
   );
 };

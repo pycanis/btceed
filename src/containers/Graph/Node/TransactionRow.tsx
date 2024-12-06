@@ -1,15 +1,19 @@
 import { Link } from "../../../components/Link";
 import { SATS_IN_BTC, VITE_BLOCKCHAIN_EXPLORER_URL } from "../../../constants";
 import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
+import { useFormatValue } from "../../../hooks/useFormatValue";
 import { Transaction } from "../../../types";
 
-type Props = { address?: string; transaction: Transaction; xpub?: string };
+type Props = { address?: string; transaction: Transaction };
 
-export const TransactionRow = ({ address, transaction, xpub }: Props) => {
+export const TransactionRow = ({ address, transaction }: Props) => {
+  const { formatValue } = useFormatValue();
+
   const {
     addressEntriesAndTransactions: { calculateTransactionFeeInSats },
   } = useGraphContext();
-  const fee = !address && xpub && calculateTransactionFeeInSats(transaction, xpub);
+
+  const fee = !address && calculateTransactionFeeInSats(transaction);
 
   return (
     <div className="ml-2">
@@ -19,14 +23,14 @@ export const TransactionRow = ({ address, transaction, xpub }: Props) => {
       on <span className="font-bold">{new Date(transaction.time * 1000).toLocaleString()}</span>{" "}
       {fee && (
         <>
-          with <span className="font-bold">{fee / SATS_IN_BTC}</span> BTC fee
+          with <span className="font-bold">{formatValue(fee)}</span> fee
         </>
       )}
       {transaction.vout
         .filter((vout) => !address || vout.scriptPubKey.address === address)
         .map((vout, i) => (
           <p key={i} className="ml-4">
-            <span className="font-bold">{vout.value}</span> BTC
+            <span className="font-bold">{formatValue(vout.value * SATS_IN_BTC)}</span>
             {address ? (
               <>
                 {" "}

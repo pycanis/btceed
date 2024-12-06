@@ -64,7 +64,12 @@ export const Popover = ({ triggerNode, children, closeOnClickOutside = true, pla
 
       {isOpen &&
         createPortal(
-          <div ref={setPopperElement} className="w-fit" style={styles.popper} {...attributes.popper}>
+          <div
+            ref={setPopperElement}
+            className="w-fit max-h-full overflow-y-scroll"
+            style={styles.popper}
+            {...attributes.popper}
+          >
             {children}
           </div>,
           document.querySelector("#popover") as Element

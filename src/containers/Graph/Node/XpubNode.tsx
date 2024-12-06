@@ -2,8 +2,9 @@ import { Handle, Position } from "@xyflow/react";
 import { NodeProps } from "@xyflow/system";
 import { useMemo } from "react";
 import { Popover } from "../../../components/Popover";
-import { SATS_IN_BTC, SCRIPT_DERIVATION_PATH_BASE } from "../../../constants";
+import { SCRIPT_DERIVATION_PATH_BASE } from "../../../constants";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
+import { useFormatValue } from "../../../hooks/useFormatValue";
 import { Direction, XpubNode as XpubNodeType } from "../../../types";
 import { getBothSideSubstring } from "../../../utils/strings";
 import { BaseNode } from "./BaseNode";
@@ -18,6 +19,7 @@ const handleDirectionMap: Record<Direction, Position> = {
 
 export const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
   const { settings, isDarkMode } = useSettingsContext();
+  const { formatValue } = useFormatValue();
 
   const { totalReceived, totalSpent, totalFee, transactionsCount } = useMemo(() => data.totals, [data.totals]);
 
@@ -36,19 +38,19 @@ export const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
         derivation={SCRIPT_DERIVATION_PATH_BASE[data.wallet.scriptType]}
       >
         <p>
-          Received <span className="font-bold">{totalReceived / SATS_IN_BTC}</span> BTC
+          Received <span className="font-bold">{formatValue(totalReceived)}</span>
         </p>
 
         <p>
-          Spent <span className="font-bold">{(totalSpent + totalFee) / SATS_IN_BTC}</span> BTC
+          Spent <span className="font-bold">{formatValue(totalSpent + totalFee)}</span>
         </p>
 
         <p>
-          Spent on fees <span className="font-bold">{totalFee / SATS_IN_BTC}</span> BTC
+          Spent on fees <span className="font-bold">{formatValue(totalFee)}</span>
         </p>
 
         <p>
-          Balance <span className="font-bold">{(totalReceived - totalSpent - totalFee) / SATS_IN_BTC}</span> BTC
+          Balance <span className="font-bold">{formatValue(totalReceived - totalSpent - totalFee)}</span>
         </p>
 
         <p>

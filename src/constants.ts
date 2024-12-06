@@ -34,9 +34,12 @@ export const DEFAULT_SETTINGS: SettingsStoreValue = {
   panOnScroll: false,
   colorScheme: "system",
   direction: "TB",
-  spacing: 200,
+  graphSpacing: 200,
   nodeColors: DEFAULT_NODE_COLORS_LIGHT_MODE,
   nodeColorsDark: DEFAULT_NODE_COLORS_DARK_MODE,
+  valuesInSats: false,
+  showAddressesWithoutTransactions: false,
+  nodeSpacing: 50,
 };
 
 export const SCRIPT_DERIVATION_PATH_BASE: Record<ScriptType, string> = {

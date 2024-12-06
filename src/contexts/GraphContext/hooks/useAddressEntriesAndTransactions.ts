@@ -362,14 +362,14 @@ export const useAddressEntriesAndTransactions = () => {
   );
 
   const calculateTransactionFeeInSats = useCallback(
-    (transaction: Transaction, xpub: string) => {
+    (transaction: Transaction) => {
       const inputsValue = transaction.vin
         .flatMap((vin) =>
           state.transactions[vin.txid].vout
             .filter((vout) => {
               const addressEntry = state.addressEntries[vout.scriptPubKey.address];
 
-              return addressEntry && addressEntry.xpub === xpub && vout.n === vin.vout;
+              return addressEntry && vout.n === vin.vout;
             })
             .map((vout) => vout.value)
         )

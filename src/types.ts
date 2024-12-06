@@ -102,9 +102,12 @@ export type SettingsStoreValue = {
   panOnScroll: boolean;
   colorScheme: ColorScheme;
   direction: Direction;
-  spacing: number;
+  graphSpacing: number;
   nodeColors: NodeColors;
   nodeColorsDark: NodeColors;
+  valuesInSats: boolean;
+  showAddressesWithoutTransactions: boolean;
+  nodeSpacing: number;
 };
 
 export interface DatabaseSchema extends DBSchema {

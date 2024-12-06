@@ -2,6 +2,7 @@ import { Edge } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
 import { SATS_IN_BTC } from "../../../constants";
 import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
+import { useSettingsContext } from "../../../contexts/SettingsContext";
 import {
   AddressEntry,
   AddressNode as IAddressNode,
@@ -13,6 +14,8 @@ import {
 // TODO: there might be some slight performance optimizations
 
 export const useNodesAndEdges = () => {
+  const { settings } = useSettingsContext();
+
   const {
     addressEntriesAndTransactions: { transactions, addressEntries, calculateTransactionFeeInSats },
   } = useGraphContext();
@@ -108,7 +111,10 @@ export const useNodesAndEdges = () => {
       adjacentAddressEntries: Record<string, AddressEntry>
     ) => {
       const xpubAddressEntries = Object.values(addressEntries).filter(
-        (addressEntry) => addressEntry.xpub === xpubNode.id && !addressEntry.isChange
+        (addressEntry) =>
+          addressEntry.xpub === xpubNode.id &&
+          !addressEntry.isChange &&
+          (settings.showAddressesWithoutTransactions || addressEntry.transactionIds!.length > 0)
       );
 
       for (const addressEntry of xpubAddressEntries) {
@@ -148,7 +154,7 @@ export const useNodesAndEdges = () => {
 
       return xpubAddressEntries;
     },
-    [transactions, addressEntries]
+    [transactions, addressEntries, settings.showAddressesWithoutTransactions]
   );
 
   const populateNodesAndEdges = useCallback(
@@ -189,7 +195,7 @@ export const useNodesAndEdges = () => {
               return addressEntry && addressEntry.xpub === xpub ? sum : sum + Math.round(vout.value * SATS_IN_BTC);
             }, 0);
 
-            fee = calculateTransactionFeeInSats(transaction, xpub);
+            fee = calculateTransactionFeeInSats(transaction);
           } else {
             received = transaction.vout.reduce((sum, vout) => {
               const addressEntry = addressEntries[vout.scriptPubKey.address];

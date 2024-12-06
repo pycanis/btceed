@@ -14,7 +14,7 @@ export const Controls = () => {
     setTimeout(() => {
       fitView();
     }, 0);
-  }, [fitView, settings.direction]);
+  }, [fitView, settings.direction, settings.showAddressesWithoutTransactions]);
 
   return (
     <>

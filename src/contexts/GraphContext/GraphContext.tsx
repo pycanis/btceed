@@ -8,7 +8,7 @@ type GraphContext = {
   addressEntriesAndTransactions: {
     addressEntries: Record<string, AddressEntry>;
     transactions: Record<string, Transaction>;
-    calculateTransactionFeeInSats: (transaction: Transaction, xpub: string) => number;
+    calculateTransactionFeeInSats: (transaction: Transaction) => number;
     isLoading: boolean;
   };
 };
