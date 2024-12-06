@@ -4,8 +4,9 @@ import { Button } from "../../../components/Button";
 import { Popover } from "../../../components/Popover";
 import { GET_DB_XPUBS } from "../../../constants";
 import { useDatabaseContext } from "../../../contexts/DatabaseContext";
+import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 import { WalletIcon } from "../../../icons/Wallet";
-import { getBothSideSubstring } from "../../../utils/strings";
+import { truncateMiddleString, truncateString } from "../../../utils/strings";
 import { getWallet } from "../../../utils/wallet";
 import { XpubFormModal } from "../../XpubFormModal";
 import { ControlButton } from "./ControlButton";
@@ -15,6 +16,7 @@ export const Wallets = () => {
   const { db } = useDatabaseContext();
   const queryClient = useQueryClient();
   const [addWalletModalOpened, setAddWalletModalOpened] = useState(false);
+  const { labels } = useGraphContext();
 
   const { data = [] } = useQuery({
     queryKey: [GET_DB_XPUBS],
@@ -44,9 +46,11 @@ export const Wallets = () => {
       >
         <ControlPopoverLayout header="Wallets">
           {wallets.map((wallet, i) => (
-            <div key={i} className="flex">
+            <div key={i} className="flex justify-between">
               <p>
-                {getBothSideSubstring(wallet.hdKey.publicExtendedKey)} {wallet.label ? `(${wallet.label})` : ""}
+                {labels[wallet.hdKey.publicExtendedKey]
+                  ? truncateString(labels[wallet.hdKey.publicExtendedKey])
+                  : truncateMiddleString(wallet.hdKey.publicExtendedKey)}
               </p>
 
               <Button

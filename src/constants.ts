@@ -11,10 +11,11 @@ export const GET_HISTORY = "blockchain.scripthash.get_history";
 export const GET_TRANSACTION = "blockchain.transaction.get";
 
 export const DB_NAME = "main";
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 export const GET_DB_XPUBS = "xpubs";
 export const GET_DB_SETTINGS = "settings";
+export const GET_DB_LABELS = "labels";
 
 export const DEFAULT_NODE_COLORS_LIGHT_MODE = {
   xpubNode: "#d8b4fe",

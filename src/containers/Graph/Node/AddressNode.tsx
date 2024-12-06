@@ -5,7 +5,7 @@ import { Popover } from "../../../components/Popover";
 import { SCRIPT_DERIVATION_PATH_BASE, VITE_BLOCKCHAIN_EXPLORER_URL } from "../../../constants";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
 import { AddressNode as AddressNodeType, Direction } from "../../../types";
-import { getBothSideSubstring } from "../../../utils/strings";
+import { truncateMiddleString } from "../../../utils/strings";
 import { BaseNode } from "./BaseNode";
 import { BasePopoverContent } from "./BasePopoverContent";
 import { TransactionRow } from "./TransactionRow";
@@ -61,7 +61,7 @@ export const AddressNode = ({ id, data }: NodeProps<AddressNodeType>) => {
     <Popover
       triggerNode={
         <BaseNode id={id} style={{ backgroundColor }}>
-          <p>{getBothSideSubstring(data.address)}</p>
+          <p>{truncateMiddleString(data.address)}</p>
 
           {spentTransactions.length > 0 && (
             <Handle type="source" position={handleDirectionMap.source[settings.direction]} id={id} />

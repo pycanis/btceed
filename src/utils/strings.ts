@@ -1,2 +1,4 @@
-export const getBothSideSubstring = (s: string, sideLength = 6) =>
+export const truncateMiddleString = (s: string, sideLength = 6) =>
   `${s.substring(0, sideLength)}..${s.substring(s.length - sideLength)}`;
+
+export const truncateString = (s: string, length = 14) => (s.length > length ? `${s.substring(0, length)}..` : s);

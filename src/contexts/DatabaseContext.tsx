@@ -21,9 +21,12 @@ export const DatabaseProvider = ({ children }: Props) => {
     openDB<DatabaseSchema>(DB_NAME, DB_VERSION, {
       upgrade: (db) => {
         const xpubsStore = db.createObjectStore("xpubs", { keyPath: "xpub" });
+
         xpubsStore.createIndex("createdAt", "createdAt");
 
         db.createObjectStore("settings", { autoIncrement: true });
+
+        db.createObjectStore("labels", { autoIncrement: true });
       },
     }).then((db) => setDb(db));
   }, []);

@@ -3,10 +3,11 @@ import { NodeProps } from "@xyflow/system";
 import { useMemo } from "react";
 import { Popover } from "../../../components/Popover";
 import { SCRIPT_DERIVATION_PATH_BASE } from "../../../constants";
+import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
 import { useFormatValue } from "../../../hooks/useFormatValue";
 import { Direction, XpubNode as XpubNodeType } from "../../../types";
-import { getBothSideSubstring } from "../../../utils/strings";
+import { truncateMiddleString, truncateString } from "../../../utils/strings";
 import { BaseNode } from "./BaseNode";
 import { BasePopoverContent } from "./BasePopoverContent";
 
@@ -19,22 +20,32 @@ const handleDirectionMap: Record<Direction, Position> = {
 
 export const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
   const { settings, isDarkMode } = useSettingsContext();
+  const { labels } = useGraphContext();
   const { formatValue } = useFormatValue();
 
   const { totalReceived, totalSpent, totalFee, transactionsCount } = useMemo(() => data.totals, [data.totals]);
+
+  const xpub = useMemo(() => data.wallet.hdKey.publicExtendedKey, [data]);
+
+  const label = useMemo(() => labels[xpub], [labels, xpub]);
 
   return (
     <Popover
       triggerNode={
         <BaseNode id={id} style={{ backgroundColor: settings[isDarkMode ? "nodeColorsDark" : "nodeColors"].xpubNode }}>
-          <p>{getBothSideSubstring(data.wallet.hdKey.publicExtendedKey)}</p>
+          <p>{label ? truncateString(label) : truncateMiddleString(xpub)}</p>
 
           <Handle type="source" position={handleDirectionMap[settings.direction]} id={id} />
         </BaseNode>
       }
     >
       <BasePopoverContent
-        header={<p className="font-bold text-lg">{data.wallet.hdKey.publicExtendedKey}</p>}
+        header={
+          <div>
+            {label && <p className="text-lg italic mb-2">{label}</p>}
+            <p className="font-bold text-lg">{xpub}</p>
+          </div>
+        }
         derivation={SCRIPT_DERIVATION_PATH_BASE[data.wallet.scriptType]}
       >
         <p>

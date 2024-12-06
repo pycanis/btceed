@@ -8,7 +8,7 @@ import { Form } from "../components/Form";
 import { Input } from "../components/Input";
 import { Modal } from "../components/Modal";
 import { SelectInput, SelectOption } from "../components/SelectInput";
-import { GET_DB_XPUBS } from "../constants";
+import { GET_DB_LABELS, GET_DB_XPUBS } from "../constants";
 import { useDatabaseContext } from "../contexts/DatabaseContext";
 import { ScriptType } from "../types";
 
@@ -21,6 +21,7 @@ const scriptTypeOptions: SelectOption[] = [
 const schema = z.object({
   xpub: z.string().min(1),
   scriptType: z.nativeEnum(ScriptType),
+  label: z.string().optional(),
 });
 
 type FormValues = TypeOf<typeof schema>;
@@ -32,7 +33,7 @@ export const XpubFormModal = ({ onClose }: Props) => {
   const queryClient = useQueryClient();
 
   const handleSubmit = useCallback(
-    async ({ xpub, scriptType }: FormValues) => {
+    async ({ xpub, scriptType, label }: FormValues) => {
       const existingXpub = await db.get("xpubs", xpub);
 
       if (existingXpub) {
@@ -43,6 +44,12 @@ export const XpubFormModal = ({ onClose }: Props) => {
         HDKey.fromExtendedKey(xpub);
 
         await db.add("xpubs", { xpub, scriptType, createdAt: Date.now() });
+
+        if (label) {
+          await db.add("labels", { label, id: xpub });
+
+          await queryClient.invalidateQueries({ queryKey: [GET_DB_LABELS] });
+        }
 
         await queryClient.invalidateQueries({ queryKey: [GET_DB_XPUBS] });
       } catch (_) {
@@ -59,7 +66,9 @@ export const XpubFormModal = ({ onClose }: Props) => {
 
         <SelectInput name="scriptType" label="Script type" options={scriptTypeOptions} />
 
-        <Button className="w-full mt-2" size="sm" type="submit">
+        <Input name="label" label="Label" placeholder="Leave empty if none" />
+
+        <Button className="w-full mt-4" size="sm" type="submit">
           Submit
         </Button>
       </Form>

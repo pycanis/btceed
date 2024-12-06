@@ -96,7 +96,7 @@ export type NodeColors = {
   externalAddress: string;
 };
 
-export type XpubStoreValue = { xpub: string; scriptType: ScriptType; createdAt: number; label?: string };
+export type XpubStoreValue = { xpub: string; scriptType: ScriptType; createdAt: number };
 
 export type SettingsStoreValue = {
   panOnScroll: boolean;
@@ -110,9 +110,13 @@ export type SettingsStoreValue = {
   nodeSpacing: number;
 };
 
+// id is either xpub, address or transaction id
+export type LabelStoreValue = { label: string; id: string };
+
 export interface DatabaseSchema extends DBSchema {
   xpubs: { key: string; value: XpubStoreValue; indexes: { createdAt: number } };
   settings: { key: number; value: SettingsStoreValue };
+  labels: { key: number; value: LabelStoreValue };
 }
 
 export type Totals = { totalSpent: number; totalReceived: number; totalFee: number; transactionsCount: number };
