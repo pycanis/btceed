@@ -1,6 +1,7 @@
 import dagre from "@dagrejs/dagre";
 import { Edge, ReactFlow } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
+import { Loader } from "../../components/Loader";
 import { useGraphContext } from "../../contexts/GraphContext/GraphContext";
 import { useSettingsContext } from "../../contexts/SettingsContext";
 import { AddressEntry, PositionlessNode, Wallet } from "../../types";
@@ -100,7 +101,7 @@ export const GraphComponent = ({ wallets }: Props) => {
   }, [wallets, isLoading, populateNodesAndEdges, getLayoutedNodesAndEdges, addressEntries, transactions]);
 
   if (isLoading) {
-    return <>loading..</>;
+    return <Loader />;
   }
 
   return (

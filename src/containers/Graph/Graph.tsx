@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { Loader } from "../../components/Loader";
 import { GET_DB_XPUBS } from "../../constants";
 import { useDatabaseContext } from "../../contexts/DatabaseContext";
 import { GraphProvider } from "../../contexts/GraphContext/GraphContext";
@@ -18,7 +19,7 @@ export const Graph = () => {
   const wallets = useMemo(() => xpubStoreValues.map(getWallet), [xpubStoreValues]);
 
   if (isLoading) {
-    return <div>loading..</div>;
+    return <Loader />;
   }
 
   return (

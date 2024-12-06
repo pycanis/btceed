@@ -8,7 +8,7 @@ type Props = {
 } & React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
 
 const variantStyles: Record<Variant, string> = {
-  contained: "rounded-lg bg-primary dark:bg-darkPrimary text-text shadow-sm hover:shadow-md hover:bg-opacity-90",
+  contained: "rounded-lg bg-primary dark:bg-primary text-text shadow-sm hover:shadow-md hover:bg-opacity-90",
   outlined: "rounded-lg bg-text text-primary shadow-sm hover:shadow-md hover:bg-opacity-50 border-2 border-primary",
   text: "text-primary hover:underline",
 };

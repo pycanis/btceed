@@ -1,5 +1,6 @@
 import { IDBPDatabase, openDB } from "idb";
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { Loader } from "../components/Loader";
 import { DB_NAME, DB_VERSION } from "../constants";
 import { DatabaseSchema } from "../types";
 
@@ -31,7 +32,7 @@ export const DatabaseProvider = ({ children }: Props) => {
 
   return (
     <DatabaseContext.Provider value={contextValue as DatabaseContext}>
-      {!db ? <>loading..</> : children}
+      {!db ? <Loader /> : children}
     </DatabaseContext.Provider>
   );
 };

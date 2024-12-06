@@ -15,7 +15,7 @@ export const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY }: EdgeProps
     <BaseEdge
       id={id}
       path={edgePath}
-      className={hoveredNodeId && id.includes(hoveredNodeId) ? "stroke-2 stroke-primary dark:stroke-darkPrimary" : ""}
+      className={hoveredNodeId && id.includes(hoveredNodeId) ? "stroke-2 stroke-primary dark:stroke-primary" : ""}
     />
   );
 };

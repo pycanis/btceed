@@ -19,7 +19,7 @@ export const SelectInput = ({ name, options, label, emptyLabel, registerOptions,
 
       <select
         {...(options && register(name, registerOptions))}
-        className={"w-full p-2 mb-4 rounded-lg border-2 text-text dark:text-darkText bg-bg dark:bg-darkBg border-text dark:border-darkText focus:outline-none focus:border-primary dark:focus:border-darkPrimary".concat(
+        className={"w-full p-2 mb-4 rounded-lg border-2 text-text dark:text-darkText bg-bg dark:bg-darkBg border-text dark:border-darkText focus:outline-none focus:border-primary dark:focus:border-primary".concat(
           " ",
           className || ""
         )}

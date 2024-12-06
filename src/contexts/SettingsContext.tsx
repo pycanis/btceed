@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Loader } from "../components/Loader";
 import { DEFAULT_SETTINGS, GET_DB_SETTINGS } from "../constants";
 import { ColorScheme, SettingsStoreValue } from "../types";
 import { useDatabaseContext } from "./DatabaseContext";
@@ -45,11 +46,7 @@ export const SettingsProvider = ({ children }: Props) => {
 
   const contextValue = useMemo(() => ({ settings, isDarkMode }), [settings, isDarkMode]);
 
-  return (
-    <SettingsContext.Provider value={contextValue}>
-      {!db || isLoading ? <>loading..</> : children}
-    </SettingsContext.Provider>
-  );
+  return <SettingsContext.Provider value={contextValue}>{isLoading ? <Loader /> : children}</SettingsContext.Provider>;
 };
 
 export const useSettingsContext = () => {

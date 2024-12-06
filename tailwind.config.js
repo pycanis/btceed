@@ -11,7 +11,6 @@ export default {
         primary: "#F2A900",
         bg: "#FFEFD5",
         text: "#3D2B1F",
-        darkPrimary: "#FFB70F",
         darkBg: "#030843",
         darkText: "#E0CEC2"
       }
