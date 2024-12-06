@@ -141,7 +141,7 @@ export const useNodesAndEdges = () => {
           id: `${xpubNode.id}-${node.id}`,
           source: xpubNode.id,
           target: node.id,
-          animated: !!adjacentAddressEntry || addressEntryTransactions.length === 0,
+          animated: !!adjacentAddressEntry,
           type: "customEdge",
         };
 

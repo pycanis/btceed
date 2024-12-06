@@ -59,7 +59,7 @@ export const Wallets = () => {
             </div>
           ))}
 
-          <Button className="mt-4" size="sm" onClick={() => setAddWalletModalOpened(true)}>
+          <Button className="w-full mt-4" size="sm" onClick={() => setAddWalletModalOpened(true)}>
             Add wallet
           </Button>
         </ControlPopoverLayout>

@@ -55,11 +55,11 @@ export const XpubFormModal = ({ onClose }: Props) => {
   return (
     <Modal header="Add wallet" onClose={onClose}>
       <Form onSubmit={handleSubmit} resolver={zodResolver(schema)}>
-        <Input name="xpub" label="Xpub" placeholder="xpub6.." />
+        <Input name="xpub" label="Xpub" placeholder="xpub6.." className="mb-2" />
 
         <SelectInput name="scriptType" label="Script type" options={scriptTypeOptions} />
 
-        <Button size="sm" type="submit">
+        <Button className="w-full mt-2" size="sm" type="submit">
           Submit
         </Button>
       </Form>

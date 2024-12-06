@@ -17,7 +17,7 @@ export const Input = ({ label, name, labelClassName, registerOptions, className,
 
       <input
         {...register(name, registerOptions)}
-        className={"w-full p-2 rounded-lg border-2 accent-primary dark:accent-darkPrimary border-black focus:outline-none focus:border-primary dark:focus:border-darkPrimary".concat(
+        className={"w-full p-2 rounded-lg border-2 text-text dark:text-darkText bg-bg dark:bg-darkBg accent-primary dark:accent-darkPrimary border-text dark:border-darkText focus:outline-none focus:border-primary dark:focus:border-darkPrimary".concat(
           " ",
           className || ""
         )}
