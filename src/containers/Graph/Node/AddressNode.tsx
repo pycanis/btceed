@@ -84,7 +84,9 @@ export const AddressNode = ({ id, data }: NodeProps<AddressNodeType>) => {
             <p className="mt-2">Received in</p>
 
             {receiveTransactions.map((transaction) => (
-              <TransactionRow key={transaction.txid} address={data.address} transaction={transaction} />
+              <ul key={transaction.txid} className="list-disc list-inside marker:text-text dark:marker:text-darkText">
+                <TransactionRow address={data.address} transaction={transaction} />
+              </ul>
             ))}
           </>
         )}
@@ -94,7 +96,9 @@ export const AddressNode = ({ id, data }: NodeProps<AddressNodeType>) => {
             <p className="mt-2">Spent as part of</p>
 
             {spentTransactions.map((transaction) => (
-              <TransactionRow key={transaction.txid} transaction={transaction} />
+              <ul key={transaction.txid} className="list-disc list-inside marker:text-text dark:marker:text-darkText">
+                <TransactionRow transaction={transaction} />
+              </ul>
             ))}
           </>
         )}

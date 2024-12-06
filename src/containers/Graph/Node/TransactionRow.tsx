@@ -16,7 +16,7 @@ export const TransactionRow = ({ address, transaction }: Props) => {
   const fee = !address && calculateTransactionFeeInSats(transaction);
 
   return (
-    <div className="ml-2">
+    <li className="ml-2">
       <Link href={`${VITE_BLOCKCHAIN_EXPLORER_URL}/tx/${transaction.txid}`} target="_blank">
         {transaction.txid}
       </Link>{" "}
@@ -26,27 +26,29 @@ export const TransactionRow = ({ address, transaction }: Props) => {
           with <span className="font-bold">{formatValue(fee)}</span> fee
         </>
       )}
-      {transaction.vout
-        .filter((vout) => !address || vout.scriptPubKey.address === address)
-        .map((vout, i) => (
-          <p key={i} className="ml-4">
-            <span className="font-bold">{formatValue(vout.value * SATS_IN_BTC)}</span>
-            {address ? (
-              <>
-                {" "}
-                as output <span className="font-bold">{vout.n}</span>
-              </>
-            ) : (
-              <>
-                {" "}
-                to{" "}
-                <Link href={`${VITE_BLOCKCHAIN_EXPLORER_URL}/address/${vout.scriptPubKey.address}`} target="_blank">
-                  {vout.scriptPubKey.address}
-                </Link>
-              </>
-            )}
-          </p>
-        ))}
-    </div>
+      <ul className="list-disc list-inside marker:text-text dark:marker:text-darkText">
+        {transaction.vout
+          .filter((vout) => !address || vout.scriptPubKey.address === address)
+          .map((vout, i) => (
+            <li key={i} className="ml-4">
+              <span className="font-bold">{formatValue(vout.value * SATS_IN_BTC)}</span>
+              {address ? (
+                <>
+                  {" "}
+                  as output <span className="font-bold">{vout.n}</span>
+                </>
+              ) : (
+                <>
+                  {" "}
+                  to{" "}
+                  <Link href={`${VITE_BLOCKCHAIN_EXPLORER_URL}/address/${vout.scriptPubKey.address}`} target="_blank">
+                    {vout.scriptPubKey.address}
+                  </Link>
+                </>
+              )}
+            </li>
+          ))}
+      </ul>
+    </li>
   );
 };
