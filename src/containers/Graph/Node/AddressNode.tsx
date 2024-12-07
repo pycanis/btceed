@@ -1,13 +1,17 @@
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Button } from "../../../components/Button";
 import { Link } from "../../../components/Link";
 import { Popover } from "../../../components/Popover";
 import { SCRIPT_DERIVATION_PATH_BASE, VITE_BLOCKCHAIN_EXPLORER_URL } from "../../../constants";
+import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
+import { PencilIcon } from "../../../icons/Pencil";
 import { AddressNode as AddressNodeType, Direction } from "../../../types";
-import { truncateMiddleString } from "../../../utils/strings";
+import { truncateMiddleString, truncateString } from "../../../utils/strings";
 import { BaseNode } from "./BaseNode";
 import { BasePopoverContent } from "./BasePopoverContent";
+import { LabelForm } from "./LabelForm";
 import { TransactionRow } from "./TransactionRow";
 
 const handleDirectionMap: { source: Record<Direction, Position>; target: Record<Direction, Position> } = {
@@ -27,6 +31,8 @@ const handleDirectionMap: { source: Record<Direction, Position>; target: Record<
 
 export const AddressNode = ({ id, data }: NodeProps<AddressNodeType>) => {
   const { settings, isDarkMode } = useSettingsContext();
+  const { labels } = useGraphContext();
+  const [isEdittingLabel, setIsEdittingLabel] = useState(false);
 
   const receiveTransactions = useMemo(
     () =>
@@ -57,11 +63,13 @@ export const AddressNode = ({ id, data }: NodeProps<AddressNodeType>) => {
     [data]
   );
 
+  const label = useMemo(() => labels[data.address] ?? "", [labels, data.address]);
+
   return (
     <Popover
       triggerNode={
         <BaseNode id={id} style={{ backgroundColor }}>
-          <p>{truncateMiddleString(data.address)}</p>
+          <p>{label ? truncateString(label) : truncateMiddleString(data.address)}</p>
 
           {spentTransactions.length > 0 && (
             <Handle type="source" position={handleDirectionMap.source[settings.direction]} id={id} />
@@ -73,9 +81,30 @@ export const AddressNode = ({ id, data }: NodeProps<AddressNodeType>) => {
     >
       <BasePopoverContent
         header={
-          <Link href={`${VITE_BLOCKCHAIN_EXPLORER_URL}/address/${data.address}`} target="_blank" className="text-lg">
-            {data.address}
-          </Link>
+          <div>
+            {label && !isEdittingLabel && (
+              <div className="text-lg italic mb-2">
+                <span className="mr-2">{label}</span>
+                <Button variant="text" onClick={() => setIsEdittingLabel(true)}>
+                  <PencilIcon />
+                </Button>
+              </div>
+            )}
+
+            {isEdittingLabel && (
+              <LabelForm id={data.address} label={label} onSubmit={() => setIsEdittingLabel(false)} />
+            )}
+
+            <Link href={`${VITE_BLOCKCHAIN_EXPLORER_URL}/address/${data.address}`} target="_blank" className="text-lg">
+              {data.address}
+            </Link>
+
+            {!label && !isEdittingLabel && (
+              <Button variant="text" className="ml-2" onClick={() => setIsEdittingLabel(true)}>
+                <PencilIcon />
+              </Button>
+            )}
+          </div>
         }
         derivation={derivation}
       >
