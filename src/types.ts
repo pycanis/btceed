@@ -116,7 +116,7 @@ export type LabelStoreValue = { label: string; id: string };
 export interface DatabaseSchema extends DBSchema {
   xpubs: { key: string; value: XpubStoreValue; indexes: { createdAt: number } };
   settings: { key: number; value: SettingsStoreValue };
-  labels: { key: number; value: LabelStoreValue };
+  labels: { key: string; value: LabelStoreValue };
 }
 
 export type Totals = { totalSpent: number; totalReceived: number; totalFee: number; transactionsCount: number };

@@ -3,13 +3,26 @@ import { useFormContext, type FieldValues, type RegisterOptions } from "react-ho
 
 type Props = {
   name: string;
-  label: string;
+  label?: string;
   labelClassName?: string;
   registerOptions?: RegisterOptions<FieldValues, string>;
 } & DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
 
 export const Input = ({ label, name, labelClassName, registerOptions, className, ...rest }: Props) => {
   const { register } = useFormContext();
+
+  if (!label) {
+    return (
+      <input
+        {...register(name, registerOptions)}
+        className={"w-full p-2 rounded-lg border-2 text-text dark:text-darkText bg-bg dark:bg-darkBg accent-primary dark:accent-primary border-text dark:border-darkText focus:outline-none focus:border-primary dark:focus:border-primary".concat(
+          " ",
+          className || ""
+        )}
+        {...rest}
+      />
+    );
+  }
 
   return (
     <label className={labelClassName}>

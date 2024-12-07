@@ -26,7 +26,7 @@ export const DatabaseProvider = ({ children }: Props) => {
 
         db.createObjectStore("settings", { autoIncrement: true });
 
-        db.createObjectStore("labels", { autoIncrement: true });
+        db.createObjectStore("labels", { keyPath: "id" });
       },
     }).then((db) => setDb(db));
   }, []);
