@@ -48,8 +48,8 @@ export const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
           <div>
             {label && !isEdittingLabel && (
               <div className="text-lg italic mb-2">
-                <span className="mr-2">{label}</span>
-                <Button variant="text" onClick={() => setIsEdittingLabel(true)}>
+                <span>{label}</span>
+                <Button variant="text" className="ml-2 translate-y-0.5" onClick={() => setIsEdittingLabel(true)}>
                   <PencilIcon />
                 </Button>
               </div>
@@ -60,7 +60,7 @@ export const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
             <p className="font-bold text-lg">
               {xpub}
               {!label && !isEdittingLabel && (
-                <Button variant="text" className="ml-2" onClick={() => setIsEdittingLabel(true)}>
+                <Button variant="text" className="ml-2 translate-y-0.5" onClick={() => setIsEdittingLabel(true)}>
                   <PencilIcon />
                 </Button>
               )}

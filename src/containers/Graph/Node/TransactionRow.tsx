@@ -3,6 +3,7 @@ import { SATS_IN_BTC, VITE_BLOCKCHAIN_EXPLORER_URL } from "../../../constants";
 import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 import { useFormatValue } from "../../../hooks/useFormatValue";
 import { Transaction } from "../../../types";
+import { OutputAddress } from "./OutputAddress";
 
 type Props = { address?: string; transaction: Transaction };
 
@@ -40,10 +41,7 @@ export const TransactionRow = ({ address, transaction }: Props) => {
               ) : (
                 <>
                   {" "}
-                  to{" "}
-                  <Link href={`${VITE_BLOCKCHAIN_EXPLORER_URL}/address/${vout.scriptPubKey.address}`} target="_blank">
-                    {vout.scriptPubKey.address}
-                  </Link>
+                  to <OutputAddress address={vout.scriptPubKey.address} />
                 </>
               )}
             </li>
