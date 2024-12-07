@@ -1,5 +1,9 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { getExchangeRates } from "../../../api/mempoolSpaceApi";
 import { Link } from "../../../components/Link";
-import { SATS_IN_BTC, VITE_BLOCKCHAIN_EXPLORER_URL } from "../../../constants";
+import { GET_DB_CURRENCIES, SATS_IN_BTC, VITE_BLOCKCHAIN_EXPLORER_URL } from "../../../constants";
+import { useDatabaseContext } from "../../../contexts/DatabaseContext";
 import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 import { useFormatValue } from "../../../hooks/useFormatValue";
 import { Transaction } from "../../../types";
@@ -8,13 +12,40 @@ import { OutputAddress } from "./OutputAddress";
 type Props = { address?: string; transaction: Transaction };
 
 export const TransactionRow = ({ address, transaction }: Props) => {
+  const { db } = useDatabaseContext();
+  const queryClient = useQueryClient();
   const { formatValue } = useFormatValue();
 
   const {
     addressEntriesAndTransactions: { calculateTransactionFeeInSats },
+    currencies,
   } = useGraphContext();
 
-  const fee = !address && calculateTransactionFeeInSats(transaction);
+  const exchangeRates = useMemo(() => currencies[transaction.time], [currencies, transaction]);
+
+  useEffect(() => {
+    if (exchangeRates) {
+      return;
+    }
+
+    getExchangeRates(transaction.time).then(async (rates) => {
+      if (!rates) {
+        return;
+      }
+
+      await db.put("exchangeRates", {
+        tsInSeconds: transaction.time,
+        rates,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: [GET_DB_CURRENCIES] });
+    });
+  }, [exchangeRates, transaction, db, queryClient]);
+
+  const fee = useMemo(
+    () => !address && calculateTransactionFeeInSats(transaction),
+    [address, calculateTransactionFeeInSats, transaction]
+  );
 
   return (
     <li className="ml-2">
@@ -24,7 +55,7 @@ export const TransactionRow = ({ address, transaction }: Props) => {
       on <span className="font-bold">{new Date(transaction.time * 1000).toLocaleString()}</span>{" "}
       {fee && (
         <>
-          with <span className="font-bold">{formatValue(fee)}</span> fee
+          with <span className="font-bold">{formatValue(fee, exchangeRates)}</span> fee
         </>
       )}
       <ul className="list-disc list-inside marker:text-text dark:marker:text-darkText">
@@ -32,7 +63,7 @@ export const TransactionRow = ({ address, transaction }: Props) => {
           .filter((vout) => !address || vout.scriptPubKey.address === address)
           .map((vout, i) => (
             <li key={i} className="ml-4">
-              <span className="font-bold">{formatValue(vout.value * SATS_IN_BTC)}</span>
+              <span className="font-bold">{formatValue(vout.value * SATS_IN_BTC, exchangeRates)}</span>
               {address ? (
                 <>
                   {" "}

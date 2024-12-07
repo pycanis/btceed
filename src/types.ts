@@ -108,15 +108,29 @@ export type SettingsStoreValue = {
   valuesInSats: boolean;
   showAddressesWithoutTransactions: boolean;
   nodeSpacing: number;
+  currency?: Currencies;
 };
 
 // id is either xpub, address or transaction id
 export type LabelStoreValue = { label: string; id: string };
 
+export enum Currencies {
+  AUD = "AUD",
+  CAD = "CAD",
+  CHF = "CHF",
+  EUR = "EUR",
+  GBP = "GBP",
+  JPY = "JPY",
+  USD = "USD",
+}
+
+export type ExchangeRatesStoreValue = { tsInSeconds: number; rates: Record<Currencies, number> };
+
 export interface DatabaseSchema extends DBSchema {
   xpubs: { key: string; value: XpubStoreValue; indexes: { createdAt: number } };
   settings: { key: number; value: SettingsStoreValue };
   labels: { key: string; value: LabelStoreValue };
+  exchangeRates: { key: number; value: ExchangeRatesStoreValue };
 }
 
 export type Totals = { totalSpent: number; totalReceived: number; totalFee: number; transactionsCount: number };

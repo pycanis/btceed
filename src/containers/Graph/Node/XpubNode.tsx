@@ -1,6 +1,7 @@
 import { Handle, Position } from "@xyflow/react";
 import { NodeProps } from "@xyflow/system";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getExchangeRates } from "../../../api/mempoolSpaceApi";
 import { Button } from "../../../components/Button";
 import { Popover } from "../../../components/Popover";
 import { SCRIPT_DERIVATION_PATH_BASE } from "../../../constants";
@@ -8,7 +9,7 @@ import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
 import { useFormatValue } from "../../../hooks/useFormatValue";
 import { PencilIcon } from "../../../icons/Pencil";
-import { Direction, XpubNode as XpubNodeType } from "../../../types";
+import { Direction, ExchangeRatesStoreValue, XpubNode as XpubNodeType } from "../../../types";
 import { truncateMiddleString, truncateString } from "../../../utils/strings";
 import { BaseNode } from "./BaseNode";
 import { BasePopoverContent } from "./BasePopoverContent";
@@ -24,10 +25,6 @@ const handleDirectionMap: Record<Direction, Position> = {
 export const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
   const { settings, isDarkMode } = useSettingsContext();
   const { labels } = useGraphContext();
-  const { formatValue } = useFormatValue();
-  const [isEdittingLabel, setIsEdittingLabel] = useState(false);
-
-  const { totalReceived, totalSpent, totalFee, transactionsCount } = useMemo(() => data.totals, [data.totals]);
 
   const xpub = useMemo(() => data.wallet.hdKey.publicExtendedKey, [data]);
 
@@ -43,52 +40,79 @@ export const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
         </BaseNode>
       }
     >
-      <BasePopoverContent
-        header={
-          <div>
-            {label && !isEdittingLabel && (
-              <div className="text-lg italic mb-2">
-                <span>{label}</span>
-                <Button variant="text" className="ml-2 translate-y-0.5" onClick={() => setIsEdittingLabel(true)}>
-                  <PencilIcon />
-                </Button>
-              </div>
-            )}
-
-            {isEdittingLabel && <LabelForm id={xpub} label={label} onSubmit={() => setIsEdittingLabel(false)} />}
-
-            <p className="font-bold text-lg">
-              {xpub}
-              {!label && !isEdittingLabel && (
-                <Button variant="text" className="ml-2 translate-y-0.5" onClick={() => setIsEdittingLabel(true)}>
-                  <PencilIcon />
-                </Button>
-              )}
-            </p>
-          </div>
-        }
-        derivation={SCRIPT_DERIVATION_PATH_BASE[data.wallet.scriptType]}
-      >
-        <p>
-          Received <span className="font-bold">{formatValue(totalReceived)}</span>
-        </p>
-
-        <p>
-          Spent <span className="font-bold">{formatValue(totalSpent + totalFee)}</span>
-        </p>
-
-        <p>
-          Spent on fees <span className="font-bold">{formatValue(totalFee)}</span>
-        </p>
-
-        <p>
-          Balance <span className="font-bold">{formatValue(totalReceived - totalSpent - totalFee)}</span>
-        </p>
-
-        <p>
-          <span className="font-bold">{transactionsCount}</span> transactions
-        </p>
-      </BasePopoverContent>
+      <XpubNodePopoverContent label={label} data={data} xpub={xpub} />
     </Popover>
+  );
+};
+
+const XpubNodePopoverContent = ({ label, data, xpub }: { label: string; data: XpubNodeType["data"]; xpub: string }) => {
+  const { settings } = useSettingsContext();
+  const { formatValue } = useFormatValue();
+  const [isEdittingLabel, setIsEdittingLabel] = useState(false);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRatesStoreValue["rates"]>();
+
+  const { totalReceived, totalSpent, totalFee, transactionsCount } = useMemo(() => data.totals, [data.totals]);
+
+  useEffect(() => {
+    if (exchangeRates || totalReceived - totalSpent - totalFee === 0 || !settings.currency) {
+      return;
+    }
+
+    getExchangeRates(Math.floor(Date.now() / 1000)).then((rates) => {
+      if (!rates) {
+        return;
+      }
+
+      setExchangeRates(rates);
+    });
+  }, [exchangeRates, totalReceived, totalSpent, totalFee, settings.currency]);
+
+  return (
+    <BasePopoverContent
+      header={
+        <div>
+          {label && !isEdittingLabel && (
+            <div className="text-lg italic mb-2">
+              <span>{label}</span>
+              <Button variant="text" className="ml-2 translate-y-0.5" onClick={() => setIsEdittingLabel(true)}>
+                <PencilIcon />
+              </Button>
+            </div>
+          )}
+
+          {isEdittingLabel && <LabelForm id={xpub} label={label} onSubmit={() => setIsEdittingLabel(false)} />}
+
+          <p className="font-bold text-lg">
+            {xpub}
+            {!label && !isEdittingLabel && (
+              <Button variant="text" className="ml-2 translate-y-0.5" onClick={() => setIsEdittingLabel(true)}>
+                <PencilIcon />
+              </Button>
+            )}
+          </p>
+        </div>
+      }
+      derivation={SCRIPT_DERIVATION_PATH_BASE[data.wallet.scriptType]}
+    >
+      <p>
+        Received <span className="font-bold">{formatValue(totalReceived)}</span>
+      </p>
+
+      <p>
+        Spent <span className="font-bold">{formatValue(totalSpent + totalFee)}</span>
+      </p>
+
+      <p>
+        Spent on fees <span className="font-bold">{formatValue(totalFee)}</span>
+      </p>
+
+      <p>
+        Balance <span className="font-bold">{formatValue(totalReceived - totalSpent - totalFee, exchangeRates)}</span>
+      </p>
+
+      <p>
+        <span className="font-bold">{transactionsCount}</span> transactions
+      </p>
+    </BasePopoverContent>
   );
 };

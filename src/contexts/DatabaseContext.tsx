@@ -27,6 +27,8 @@ export const DatabaseProvider = ({ children }: Props) => {
         db.createObjectStore("settings", { autoIncrement: true });
 
         db.createObjectStore("labels", { keyPath: "id" });
+
+        db.createObjectStore("exchangeRates", { keyPath: "tsInSeconds" });
       },
     }).then((db) => setDb(db));
   }, []);

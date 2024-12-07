@@ -64,7 +64,7 @@ export const XpubFormModal = ({ onClose }: Props) => {
       <Form onSubmit={handleSubmit} resolver={zodResolver(schema)}>
         <Input name="xpub" label="Xpub" placeholder="xpub6.." className="mb-2" />
 
-        <SelectInput name="scriptType" label="Script type" options={scriptTypeOptions} />
+        <SelectInput name="scriptType" label="Script type" options={scriptTypeOptions} className="mb-2" />
 
         <Input name="label" label="Label" placeholder="Leave empty if none" />
 

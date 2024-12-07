@@ -1,4 +1,4 @@
-import { ScriptType, SettingsStoreValue } from "./types";
+import { Currencies, ScriptType, SettingsStoreValue } from "./types";
 
 export const VITE_ELECTRUM_WS_SERVER_URL = import.meta.env.VITE_ELECTRUM_WS_SERVER_URL;
 export const VITE_BLOCKCHAIN_EXPLORER_URL = import.meta.env.VITE_BLOCKCHAIN_EXPLORER_URL;
@@ -11,11 +11,12 @@ export const GET_HISTORY = "blockchain.scripthash.get_history";
 export const GET_TRANSACTION = "blockchain.transaction.get";
 
 export const DB_NAME = "main";
-export const DB_VERSION = 2;
+export const DB_VERSION = 1;
 
 export const GET_DB_XPUBS = "xpubs";
 export const GET_DB_SETTINGS = "settings";
 export const GET_DB_LABELS = "labels";
+export const GET_DB_CURRENCIES = "currencies";
 
 export const DEFAULT_NODE_COLORS_LIGHT_MODE = {
   xpubNode: "#d8b4fe",
@@ -41,6 +42,7 @@ export const DEFAULT_SETTINGS: SettingsStoreValue = {
   valuesInSats: false,
   showAddressesWithoutTransactions: false,
   nodeSpacing: 50,
+  currency: Currencies.USD,
 };
 
 export const SCRIPT_DERIVATION_PATH_BASE: Record<ScriptType, string> = {

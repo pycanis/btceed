@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import { TypeOf, z } from "zod";
 import { Button } from "../../../components/Button";
@@ -9,12 +9,13 @@ import { ColorInput } from "../../../components/ColorInput";
 import { Form } from "../../../components/Form";
 import { Input } from "../../../components/Input";
 import { Popover } from "../../../components/Popover";
+import { SelectInput, SelectOption } from "../../../components/SelectInput";
 import { Switch } from "../../../components/Switch";
 import { DEFAULT_NODE_COLORS_DARK_MODE, DEFAULT_NODE_COLORS_LIGHT_MODE, GET_DB_SETTINGS } from "../../../constants";
 import { useDatabaseContext } from "../../../contexts/DatabaseContext";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
 import { SettingsIcon } from "../../../icons/Settings";
-import { ColorScheme, Direction, NodeType } from "../../../types";
+import { ColorScheme, Currencies, Direction, NodeType } from "../../../types";
 import { ControlButton } from "./ControlButton";
 import { ControlPopoverLayout } from "./ControlPopoverLayout";
 
@@ -44,6 +45,7 @@ const schema = z.object({
   valuesInSats: z.boolean(),
   showAddressesWithoutTransactions: z.boolean(),
   nodeSpacing: z.number().min(50).max(500),
+  currency: z.nativeEnum(Currencies).optional(),
 });
 
 type FormValues = TypeOf<typeof schema>;
@@ -159,13 +161,26 @@ const FormFields = () => {
     return () => subscription.unsubscribe();
   }, [handleSubmit, watch, onSubmit]);
 
+  const currencyOptions = useMemo<SelectOption[]>(
+    () => Object.values(Currencies).map((currency) => ({ label: currency, value: currency })),
+    []
+  );
+
   return (
     <div className="max-w-96">
       <Switch name="valuesInSats" label="Display values in sats" />
 
       <Switch name="showAddressesWithoutTransactions" label="Display addresses without transactions" className="my-4" />
 
-      <Switch name="panOnScroll" label="Figma-like controls" />
+      <Switch name="panOnScroll" label="Figma-like controls" className="mb-2" />
+
+      <SelectInput
+        name="currency"
+        label="Currency"
+        emptyLabel="<none>"
+        options={currencyOptions}
+        registerOptions={{ setValueAs: (v) => (v === "" ? undefined : v) }}
+      />
 
       <ChoiceInput
         name="direction"

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useMemo, useState } from "react";
-import { GET_DB_LABELS } from "../../constants";
-import { AddressEntry, Transaction } from "../../types";
+import { GET_DB_CURRENCIES, GET_DB_LABELS } from "../../constants";
+import { AddressEntry, Currencies, Transaction } from "../../types";
 import { useDatabaseContext } from "../DatabaseContext";
 import { useAddressEntriesAndTransactions } from "./hooks/useAddressEntriesAndTransactions";
 
@@ -15,6 +15,7 @@ type GraphContext = {
     isLoading: boolean;
   };
   labels: Record<string, string>;
+  currencies: Record<number, Record<Currencies, number>>;
 };
 
 const GraphContext = createContext({} as GraphContext);
@@ -33,6 +34,11 @@ export const GraphProvider = ({ children }: Props) => {
     queryFn: () => db.getAll("labels"),
   });
 
+  const { data: currencyStoreValues = [] } = useQuery({
+    queryKey: [GET_DB_CURRENCIES],
+    queryFn: () => db.getAll("exchangeRates"),
+  });
+
   const labels = useMemo(
     () =>
       labelStoreValues.reduce((acc, labelStoreValue) => {
@@ -43,9 +49,19 @@ export const GraphProvider = ({ children }: Props) => {
     [labelStoreValues]
   );
 
+  const currencies = useMemo(
+    () =>
+      currencyStoreValues.reduce((acc, currencyStoreValue) => {
+        acc[currencyStoreValue.tsInSeconds] = currencyStoreValue.rates;
+
+        return acc;
+      }, {} as Record<number, Record<Currencies, number>>),
+    [currencyStoreValues]
+  );
+
   const contextValue = useMemo(
-    () => ({ hoveredNodeId, setHoveredNodeId, addressEntriesAndTransactions, labels }),
-    [hoveredNodeId, addressEntriesAndTransactions, labels]
+    () => ({ hoveredNodeId, setHoveredNodeId, addressEntriesAndTransactions, labels, currencies }),
+    [hoveredNodeId, addressEntriesAndTransactions, labels, currencies]
   );
 
   return <GraphContext.Provider value={contextValue}>{children}</GraphContext.Provider>;

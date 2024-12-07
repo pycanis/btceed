@@ -4,11 +4,10 @@ import { useFormContext, type FieldValues, type RegisterOptions } from "react-ho
 type Props = {
   name: string;
   label?: string;
-  labelClassName?: string;
   registerOptions?: RegisterOptions<FieldValues, string>;
 } & DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
 
-export const Input = ({ label, name, labelClassName, registerOptions, className, ...rest }: Props) => {
+export const Input = ({ label, name, registerOptions, className, ...rest }: Props) => {
   const { register } = useFormContext();
 
   if (!label) {
@@ -25,7 +24,7 @@ export const Input = ({ label, name, labelClassName, registerOptions, className,
   }
 
   return (
-    <label className={labelClassName}>
+    <label>
       {label}
 
       <input
