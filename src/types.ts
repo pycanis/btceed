@@ -108,6 +108,7 @@ export type SettingsStoreValue = {
   valuesInSats: boolean;
   showAddressesWithoutTransactions: boolean;
   nodeSpacing: number;
+  miniMap: boolean;
   currency?: Currencies;
 };
 

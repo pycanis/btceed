@@ -43,6 +43,7 @@ export const DEFAULT_SETTINGS: SettingsStoreValue = {
   showAddressesWithoutTransactions: false,
   nodeSpacing: 50,
   currency: Currencies.USD,
+  miniMap: false,
 };
 
 export const SCRIPT_DERIVATION_PATH_BASE: Record<ScriptType, string> = {

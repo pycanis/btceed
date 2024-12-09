@@ -46,6 +46,7 @@ const schema = z.object({
   showAddressesWithoutTransactions: z.boolean(),
   nodeSpacing: z.number().min(50).max(500),
   currency: z.nativeEnum(Currencies).optional(),
+  miniMap: z.boolean(),
 });
 
 type FormValues = TypeOf<typeof schema>;
@@ -171,6 +172,8 @@ const FormFields = () => {
       <Switch name="valuesInSats" label="Display values in sats" />
 
       <Switch name="showAddressesWithoutTransactions" label="Display addresses without transactions" className="my-4" />
+
+      <Switch name="miniMap" label="Display mini map" className="mb-4" />
 
       <Switch name="panOnScroll" label="Figma-like controls" className="mb-2" />
 
