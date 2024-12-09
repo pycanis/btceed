@@ -1,15 +1,15 @@
 import { Handle, Position } from "@xyflow/react";
 import { NodeProps } from "@xyflow/system";
-import { useEffect, useMemo, useState } from "react";
-import { getExchangeRates } from "../../../api/mempoolSpaceApi";
+import { useMemo, useState } from "react";
 import { Button } from "../../../components/Button";
 import { Popover } from "../../../components/Popover";
 import { SCRIPT_DERIVATION_PATH_BASE } from "../../../constants";
 import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
+import { useExchangeRates } from "../../../hooks/useExchangeRates";
 import { useFormatValue } from "../../../hooks/useFormatValue";
 import { PencilIcon } from "../../../icons/Pencil";
-import { Direction, ExchangeRatesStoreValue, XpubNode as XpubNodeType } from "../../../types";
+import { Direction, XpubNode as XpubNodeType } from "../../../types";
 import { truncateMiddleString, truncateString } from "../../../utils/strings";
 import { BaseNode } from "./BaseNode";
 import { BasePopoverContent } from "./BasePopoverContent";
@@ -46,26 +46,17 @@ export const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
 };
 
 const XpubNodePopoverContent = ({ label, data, xpub }: { label: string; data: XpubNodeType["data"]; xpub: string }) => {
-  const { settings } = useSettingsContext();
   const { formatValue } = useFormatValue();
   const [isEdittingLabel, setIsEdittingLabel] = useState(false);
-  const [exchangeRates, setExchangeRates] = useState<ExchangeRatesStoreValue["rates"]>();
 
   const { totalReceived, totalSpent, totalFee, transactionsCount } = useMemo(() => data.totals, [data.totals]);
 
-  useEffect(() => {
-    if (exchangeRates || totalReceived - totalSpent - totalFee === 0 || !settings.currency) {
-      return;
-    }
+  const shouldFetchExchangeRates = useMemo(
+    () => totalReceived - totalSpent - totalFee !== 0,
+    [totalReceived, totalSpent, totalFee]
+  );
 
-    getExchangeRates(Math.floor(Date.now() / 1000)).then((rates) => {
-      if (!rates) {
-        return;
-      }
-
-      setExchangeRates(rates);
-    });
-  }, [exchangeRates, totalReceived, totalSpent, totalFee, settings.currency]);
+  const exchangeRates = useExchangeRates(Math.floor(Date.now() / 1000), shouldFetchExchangeRates, false);
 
   return (
     <BasePopoverContent

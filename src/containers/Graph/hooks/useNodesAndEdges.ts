@@ -1,6 +1,5 @@
 import { Edge } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
-import { SATS_IN_BTC } from "../../../constants";
 import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
 import {
@@ -17,7 +16,15 @@ export const useNodesAndEdges = () => {
   const { settings } = useSettingsContext();
 
   const {
-    addressEntriesAndTransactions: { transactions, addressEntries, calculateTransactionFeeInSats },
+    addressEntriesAndTransactions: {
+      transactions,
+      addressEntries,
+      adjacentAddressEntries,
+      calculateTransactionFeeInSats,
+      isSpendingTransaction,
+      calculateTransactionSpentInSats,
+      calculateTransactionReceivedInSats,
+    },
   } = useGraphContext();
 
   const populateAddressNodesAndEdges = useCallback(
@@ -107,8 +114,7 @@ export const useNodesAndEdges = () => {
       wallet: Wallet,
       nodes: Record<string, PositionlessNode>,
       edges: Record<string, Edge>,
-      xpubNode: Omit<XpubNodeType, "position">,
-      adjacentAddressEntries: Record<string, AddressEntry>
+      xpubNode: Omit<XpubNodeType, "position">
     ) => {
       const xpubAddressEntries = Object.values(addressEntries).filter(
         (addressEntry) =>
@@ -154,16 +160,11 @@ export const useNodesAndEdges = () => {
 
       return xpubAddressEntries;
     },
-    [transactions, addressEntries, settings.showAddressesWithoutTransactions]
+    [transactions, addressEntries, settings.showAddressesWithoutTransactions, adjacentAddressEntries]
   );
 
   const populateNodesAndEdges = useCallback(
-    (
-      wallet: Wallet,
-      nodes: Record<string, PositionlessNode>,
-      edges: Record<string, Edge>,
-      adjacentAddressEntries: Record<string, AddressEntry>
-    ) => {
+    (wallet: Wallet, nodes: Record<string, PositionlessNode>, edges: Record<string, Edge>) => {
       const xpub = wallet.hdKey.publicExtendedKey;
 
       const xpubTransactionIds = new Set(
@@ -180,28 +181,12 @@ export const useNodesAndEdges = () => {
 
           const transaction = transactions[transactionId];
 
-          const isSpendingTransaction = transaction.vin.some((vin) =>
-            transactions[vin.txid]?.vout.some((vout) => {
-              const addressEntry = addressEntries[vout.scriptPubKey.address];
-
-              return addressEntry && addressEntry.xpub === xpub && vout.n === vin.vout;
-            })
-          );
-
-          if (isSpendingTransaction) {
-            spent = transaction.vout.reduce((sum, vout) => {
-              const addressEntry = addressEntries[vout.scriptPubKey.address];
-
-              return addressEntry && addressEntry.xpub === xpub ? sum : sum + Math.round(vout.value * SATS_IN_BTC);
-            }, 0);
+          if (isSpendingTransaction(transaction, xpub)) {
+            spent = calculateTransactionSpentInSats(transaction, xpub);
 
             fee = calculateTransactionFeeInSats(transaction);
           } else {
-            received = transaction.vout.reduce((sum, vout) => {
-              const addressEntry = addressEntries[vout.scriptPubKey.address];
-
-              return addressEntry && addressEntry.xpub === xpub ? sum + Math.round(vout.value * SATS_IN_BTC) : sum;
-            }, 0);
+            received = calculateTransactionReceivedInSats(transaction, xpub);
           }
 
           return {
@@ -222,7 +207,7 @@ export const useNodesAndEdges = () => {
 
       nodes[xpubNode.id] = xpubNode;
 
-      const xpubAddressEntries = getXpubAddressesNodesAndEdges(wallet, nodes, edges, xpubNode, adjacentAddressEntries);
+      const xpubAddressEntries = getXpubAddressesNodesAndEdges(wallet, nodes, edges, xpubNode);
 
       populateAddressNodesAndEdges(wallet, nodes, edges, xpubAddressEntries);
     },
@@ -230,6 +215,9 @@ export const useNodesAndEdges = () => {
       getXpubAddressesNodesAndEdges,
       populateAddressNodesAndEdges,
       calculateTransactionFeeInSats,
+      isSpendingTransaction,
+      calculateTransactionSpentInSats,
+      calculateTransactionReceivedInSats,
       transactions,
       addressEntries,
     ]

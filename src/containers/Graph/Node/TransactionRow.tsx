@@ -1,10 +1,8 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
-import { getExchangeRates } from "../../../api/mempoolSpaceApi";
+import { useMemo } from "react";
 import { Link } from "../../../components/Link";
-import { GET_DB_CURRENCIES, SATS_IN_BTC, VITE_BLOCKCHAIN_EXPLORER_URL } from "../../../constants";
-import { useDatabaseContext } from "../../../contexts/DatabaseContext";
+import { SATS_IN_BTC, VITE_BLOCKCHAIN_EXPLORER_URL } from "../../../constants";
 import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
+import { useExchangeRates } from "../../../hooks/useExchangeRates";
 import { useFormatValue } from "../../../hooks/useFormatValue";
 import { Transaction } from "../../../types";
 import { OutputAddress } from "./OutputAddress";
@@ -12,35 +10,13 @@ import { OutputAddress } from "./OutputAddress";
 type Props = { address?: string; transaction: Transaction };
 
 export const TransactionRow = ({ address, transaction }: Props) => {
-  const { db } = useDatabaseContext();
-  const queryClient = useQueryClient();
   const { formatValue } = useFormatValue();
 
   const {
     addressEntriesAndTransactions: { calculateTransactionFeeInSats },
-    currencies,
   } = useGraphContext();
 
-  const exchangeRates = useMemo(() => currencies[transaction.time], [currencies, transaction]);
-
-  useEffect(() => {
-    if (exchangeRates) {
-      return;
-    }
-
-    getExchangeRates(transaction.time).then(async (rates) => {
-      if (!rates) {
-        return;
-      }
-
-      await db.put("exchangeRates", {
-        tsInSeconds: transaction.time,
-        rates,
-      });
-
-      await queryClient.invalidateQueries({ queryKey: [GET_DB_CURRENCIES] });
-    });
-  }, [exchangeRates, transaction, db, queryClient]);
+  const exchangeRates = useExchangeRates(transaction.time);
 
   const fee = useMemo(
     () => !address && calculateTransactionFeeInSats(transaction),

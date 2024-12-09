@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useMemo, useState } from "react";
-import { GET_DB_CURRENCIES, GET_DB_LABELS } from "../../constants";
+import { Loader } from "../../components/Loader";
+import { GET_DB_EXCHANGE_RATES, GET_DB_LABELS } from "../../constants";
 import { AddressEntry, Currencies, Transaction } from "../../types";
 import { useDatabaseContext } from "../DatabaseContext";
 import { useAddressEntriesAndTransactions } from "./hooks/useAddressEntriesAndTransactions";
@@ -10,12 +11,18 @@ type GraphContext = {
   setHoveredNodeId: Dispatch<SetStateAction<string | null>>;
   addressEntriesAndTransactions: {
     addressEntries: Record<string, AddressEntry>;
+    adjacentAddressEntries: Record<string, AddressEntry>;
     transactions: Record<string, Transaction>;
     calculateTransactionFeeInSats: (transaction: Transaction) => number;
+    isSpendingTransaction: (transaction: Transaction, xpub?: string) => boolean;
+    calculateTransactionSpentInSats: (transaction: Transaction, xpub?: string) => number;
+    calculateTransactionReceivedInSats: (transaction: Transaction, xpub?: string) => number;
     isLoading: boolean;
   };
   labels: Record<string, string>;
-  currencies: Record<number, Record<Currencies, number>>;
+  exchangeRates: Record<number, Record<Currencies, number>>;
+  isCsvExportLoading: boolean;
+  setIsCsvExportLoading: Dispatch<SetStateAction<boolean>>;
 };
 
 const GraphContext = createContext({} as GraphContext);
@@ -28,14 +35,15 @@ export const GraphProvider = ({ children }: Props) => {
   const { db } = useDatabaseContext();
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const addressEntriesAndTransactions = useAddressEntriesAndTransactions();
+  const [isCsvExportLoading, setIsCsvExportLoading] = useState(false);
 
   const { data: labelStoreValues = [] } = useQuery({
     queryKey: [GET_DB_LABELS],
     queryFn: () => db.getAll("labels"),
   });
 
-  const { data: currencyStoreValues = [] } = useQuery({
-    queryKey: [GET_DB_CURRENCIES],
+  const { data: exchangeRatesStoreValues = [] } = useQuery({
+    queryKey: [GET_DB_EXCHANGE_RATES],
     queryFn: () => db.getAll("exchangeRates"),
   });
 
@@ -49,22 +57,34 @@ export const GraphProvider = ({ children }: Props) => {
     [labelStoreValues]
   );
 
-  const currencies = useMemo(
+  const exchangeRates = useMemo(
     () =>
-      currencyStoreValues.reduce((acc, currencyStoreValue) => {
-        acc[currencyStoreValue.tsInSeconds] = currencyStoreValue.rates;
+      exchangeRatesStoreValues.reduce((acc, exchangeRateStoreValue) => {
+        acc[exchangeRateStoreValue.tsInSeconds] = exchangeRateStoreValue.rates;
 
         return acc;
       }, {} as Record<number, Record<Currencies, number>>),
-    [currencyStoreValues]
+    [exchangeRatesStoreValues]
   );
 
   const contextValue = useMemo(
-    () => ({ hoveredNodeId, setHoveredNodeId, addressEntriesAndTransactions, labels, currencies }),
-    [hoveredNodeId, addressEntriesAndTransactions, labels, currencies]
+    () => ({
+      hoveredNodeId,
+      setHoveredNodeId,
+      addressEntriesAndTransactions,
+      labels,
+      exchangeRates,
+      isCsvExportLoading,
+      setIsCsvExportLoading,
+    }),
+    [hoveredNodeId, addressEntriesAndTransactions, labels, exchangeRates, isCsvExportLoading]
   );
 
-  return <GraphContext.Provider value={contextValue}>{children}</GraphContext.Provider>;
+  return (
+    <GraphContext.Provider value={contextValue}>
+      {addressEntriesAndTransactions.isLoading ? <Loader /> : children}
+    </GraphContext.Provider>
+  );
 };
 
 export const useGraphContext = () => {

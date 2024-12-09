@@ -1,10 +1,8 @@
 import dagre from "@dagrejs/dagre";
 import { Edge, ReactFlow } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
-import { Loader } from "../../components/Loader";
-import { useGraphContext } from "../../contexts/GraphContext/GraphContext";
 import { useSettingsContext } from "../../contexts/SettingsContext";
-import { AddressEntry, PositionlessNode, Wallet } from "../../types";
+import { PositionlessNode, Wallet } from "../../types";
 import { Controls } from "./Controls/Controls";
 import { CustomEdge } from "./Edge";
 import { useNodesAndEdges } from "./hooks/useNodesAndEdges";
@@ -12,6 +10,7 @@ import { AddressNode } from "./Node/AddressNode";
 import { XpubNode } from "./Node/XpubNode";
 
 import "@xyflow/react/dist/style.css";
+import { Notifications } from "./Notifications";
 
 type Props = {
   wallets: Wallet[];
@@ -20,10 +19,6 @@ type Props = {
 export const GraphComponent = ({ wallets }: Props) => {
   const { settings } = useSettingsContext();
   const { populateNodesAndEdges } = useNodesAndEdges();
-
-  const {
-    addressEntriesAndTransactions: { isLoading, addressEntries, transactions },
-  } = useGraphContext();
 
   const getLayoutedNodesAndEdges = useCallback(
     (nodes: PositionlessNode[], edges: Edge[]) => {
@@ -65,44 +60,15 @@ export const GraphComponent = ({ wallets }: Props) => {
   );
 
   const { nodes, edges } = useMemo(() => {
-    if (isLoading) {
-      return { nodes: [], edges: [] };
-    }
-
     const allNodes: Record<string, PositionlessNode> = {};
     const allEdges: Record<string, Edge> = {};
 
-    const adjacentAddressEntries = Object.values(addressEntries).reduce((acc, addressEntry) => {
-      addressEntry.transactionIds!.some((transactionId) =>
-        transactions[transactionId].vout.some((vout) => {
-          const existingAddressEntry = addressEntries[vout.scriptPubKey.address];
-
-          if (
-            existingAddressEntry &&
-            !existingAddressEntry.isChange &&
-            existingAddressEntry.xpub !== addressEntry.xpub
-          ) {
-            acc[existingAddressEntry.address] = existingAddressEntry;
-          }
-        })
-      );
-
-      return acc;
-    }, {} as Record<string, AddressEntry>);
-
     for (const wallet of wallets) {
-      populateNodesAndEdges(wallet, allNodes, allEdges, adjacentAddressEntries);
+      populateNodesAndEdges(wallet, allNodes, allEdges);
     }
 
-    return getLayoutedNodesAndEdges(
-      Object.values(allNodes).map((node) => node),
-      Object.values(allEdges).map((edge) => edge)
-    );
-  }, [wallets, isLoading, populateNodesAndEdges, getLayoutedNodesAndEdges, addressEntries, transactions]);
-
-  if (isLoading) {
-    return <Loader />;
-  }
+    return getLayoutedNodesAndEdges(Object.values(allNodes), Object.values(allEdges));
+  }, [wallets, populateNodesAndEdges, getLayoutedNodesAndEdges]);
 
   return (
     <ReactFlow
@@ -119,6 +85,8 @@ export const GraphComponent = ({ wallets }: Props) => {
       panOnScroll={settings.panOnScroll}
       fitView
     >
+      <Notifications />
+
       <Controls />
     </ReactFlow>
   );

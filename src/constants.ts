@@ -16,7 +16,7 @@ export const DB_VERSION = 1;
 export const GET_DB_XPUBS = "xpubs";
 export const GET_DB_SETTINGS = "settings";
 export const GET_DB_LABELS = "labels";
-export const GET_DB_CURRENCIES = "currencies";
+export const GET_DB_EXCHANGE_RATES = "exchangeRates";
 
 export const DEFAULT_NODE_COLORS_LIGHT_MODE = {
   xpubNode: "#d8b4fe",

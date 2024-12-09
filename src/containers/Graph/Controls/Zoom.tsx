@@ -27,7 +27,7 @@ export const Zoom = () => {
         <span className={`text-xl -translate-y-px ${zoomOutDisabled ? "opacity-50" : ""}`}>-</span>
       </ControlButton>
 
-      <ControlButton onClick={() => fitView()} noBorder>
+      <ControlButton onClick={() => fitView()}>
         <FitViewIcon />
       </ControlButton>
     </>

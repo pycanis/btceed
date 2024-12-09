@@ -1,6 +1,7 @@
 import { Panel, useReactFlow } from "@xyflow/react";
 import { useEffect } from "react";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
+import { Export } from "./Export";
 import { Settings } from "./Settings";
 import { Wallets } from "./Wallets";
 import { Zoom } from "./Zoom";
@@ -25,6 +26,8 @@ export const Controls = () => {
           <Settings />
 
           <Zoom />
+
+          <Export />
         </div>
       </Panel>
 

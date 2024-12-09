@@ -119,20 +119,12 @@ const reducer = (state: State, action: Action): State => {
     case "walletsUpdatedAction": {
       const { wallets, deriveAddressRange, getAddressEntriesHistory, previousAddressesLoaded } = action.payload;
 
-      const addedWallets = wallets.filter(
+      const addedWallet = wallets.find(
         (wallet) => !Object.keys(state.xpubLastActiveIndexes).some((xpub) => xpub === wallet.hdKey.publicExtendedKey)
       );
 
-      if (addedWallets.length > 0) {
-        const addressEntries = addedWallets.flatMap((wallet) => [
-          ...deriveAddressRange(wallet, false),
-          ...deriveAddressRange(wallet, true),
-        ]);
-
-        const xpubLastActiveIndexes = addedWallets.reduce((acc, wallet) => {
-          acc[wallet.hdKey.publicExtendedKey] = { receive: 0, change: 0 };
-          return acc;
-        }, {} as XpubLastActiveIndexes);
+      if (addedWallet) {
+        const addressEntries = [...deriveAddressRange(addedWallet, false), ...deriveAddressRange(addedWallet, true)];
 
         getAddressEntriesHistory(addressEntries);
         previousAddressesLoaded.current = false;
@@ -147,30 +139,64 @@ const reducer = (state: State, action: Action): State => {
               return acc;
             }, {} as Record<string, AddressEntry>),
           },
-          xpubLastActiveIndexes: { ...state.xpubLastActiveIndexes, ...xpubLastActiveIndexes },
+          xpubLastActiveIndexes: {
+            ...state.xpubLastActiveIndexes,
+            [addedWallet.hdKey.publicExtendedKey]: { receive: 0, change: 0 },
+          },
         };
       }
 
-      const removedXpubs = Object.keys(state.xpubLastActiveIndexes).filter(
+      const removedXpub = Object.keys(state.xpubLastActiveIndexes).find(
         (xpub) => !wallets.some((wallet) => wallet.hdKey.publicExtendedKey === xpub)
       );
 
       const addressEntriesCopy = { ...state.addressEntries };
+      const transactionsCopy = { ...state.transactions };
       const xpubLastActiveIndexesCopy = { ...state.xpubLastActiveIndexes };
 
       Object.values(state.addressEntries).forEach((addressEntry) => {
-        if (removedXpubs.includes(addressEntry.xpub)) {
+        if (removedXpub === addressEntry.xpub) {
           delete addressEntriesCopy[addressEntry.address];
         }
       });
 
+      Object.values(state.transactions).forEach((transaction) => {
+        const shouldDeleteTransaction =
+          transaction.vin.every((vin) => {
+            const vinTransaction = state.transactions[vin.txid];
+
+            if (!vinTransaction) {
+              return true;
+            }
+
+            const vout = vinTransaction.vout.find((vout) => vout.n === vin.vout);
+
+            if (!vout) {
+              return true;
+            }
+
+            const addressEntry = addressEntriesCopy[vout.scriptPubKey.address];
+
+            return !addressEntry;
+          }) && transaction.vout.every((vout) => !addressEntriesCopy[vout.scriptPubKey.address]);
+
+        if (shouldDeleteTransaction) {
+          delete transactionsCopy[transaction.txid];
+        }
+      });
+
       Object.keys(state.xpubLastActiveIndexes).forEach((xpub) => {
-        if (removedXpubs.includes(xpub)) {
+        if (removedXpub === xpub) {
           delete xpubLastActiveIndexesCopy[xpub];
         }
       });
 
-      return { ...state, addressEntries: addressEntriesCopy, xpubLastActiveIndexes: xpubLastActiveIndexesCopy };
+      return {
+        ...state,
+        addressEntries: addressEntriesCopy,
+        transactions: transactionsCopy,
+        xpubLastActiveIndexes: xpubLastActiveIndexesCopy,
+      };
     }
 
     default:
@@ -361,6 +387,32 @@ export const useAddressEntriesAndTransactions = () => {
     [addressesLoaded, state]
   );
 
+  const adjacentAddressEntries = useMemo(
+    () =>
+      Object.values(state.addressEntries).reduce((acc, addressEntry) => {
+        if (!addressEntry.transactionIds) {
+          return acc;
+        }
+
+        addressEntry.transactionIds.some((transactionId) =>
+          state.transactions[transactionId]?.vout.some((vout) => {
+            const existingAddressEntry = state.addressEntries[vout.scriptPubKey.address];
+
+            if (
+              existingAddressEntry &&
+              !existingAddressEntry.isChange &&
+              existingAddressEntry.xpub !== addressEntry.xpub
+            ) {
+              acc[existingAddressEntry.address] = existingAddressEntry;
+            }
+          })
+        );
+
+        return acc;
+      }, {} as Record<string, AddressEntry>),
+    [state]
+  );
+
   const calculateTransactionFeeInSats = useCallback(
     (transaction: Transaction) => {
       const inputsValue = transaction.vin
@@ -382,13 +434,59 @@ export const useAddressEntriesAndTransactions = () => {
     [state]
   );
 
+  const isSpendingTransaction = useCallback(
+    (transaction: Transaction, xpub?: string) =>
+      transaction.vin.some((vin) =>
+        state.transactions[vin.txid]?.vout.some((vout) => {
+          const addressEntry = state.addressEntries[vout.scriptPubKey.address];
+
+          return addressEntry && (!xpub || addressEntry.xpub === xpub) && vout.n === vin.vout;
+        })
+      ),
+    [state]
+  );
+
+  const calculateTransactionSpentInSats = useCallback(
+    (transaction: Transaction, xpub?: string) =>
+      transaction.vout.reduce((sum, vout) => {
+        const addressEntry = state.addressEntries[vout.scriptPubKey.address];
+
+        return addressEntry && (!xpub || addressEntry.xpub === xpub) ? sum : sum + Math.round(vout.value * SATS_IN_BTC);
+      }, 0),
+    [state]
+  );
+
+  const calculateTransactionReceivedInSats = useCallback(
+    (transaction: Transaction, xpub?: string) =>
+      transaction.vout.reduce((sum, vout) => {
+        const addressEntry = state.addressEntries[vout.scriptPubKey.address];
+
+        return addressEntry && (!xpub || addressEntry.xpub === xpub) ? sum + Math.round(vout.value * SATS_IN_BTC) : sum;
+      }, 0),
+    [state]
+  );
+
   return useMemo(
     () => ({
       addressEntries: state.addressEntries,
       transactions: state.transactions,
+      adjacentAddressEntries,
       calculateTransactionFeeInSats,
+      isSpendingTransaction,
+      calculateTransactionSpentInSats,
+      calculateTransactionReceivedInSats,
       isLoading: !addressesLoaded || !transactionsLoaded || !initialTransactionsLoaded,
     }),
-    [state, addressesLoaded, transactionsLoaded, initialTransactionsLoaded, calculateTransactionFeeInSats]
+    [
+      state,
+      addressesLoaded,
+      transactionsLoaded,
+      initialTransactionsLoaded,
+      adjacentAddressEntries,
+      calculateTransactionFeeInSats,
+      isSpendingTransaction,
+      calculateTransactionSpentInSats,
+      calculateTransactionReceivedInSats,
+    ]
   );
 };
