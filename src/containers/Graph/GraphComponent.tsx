@@ -6,11 +6,12 @@ import { PositionlessNode, Wallet } from "../../types";
 import { Controls } from "./Controls/Controls";
 import { CustomEdge } from "./Edge";
 import { useNodesAndEdges } from "./hooks/useNodesAndEdges";
+import { Links } from "./Links";
 import { AddressNode } from "./Node/AddressNode";
 import { XpubNode } from "./Node/XpubNode";
+import { Notifications } from "./Notifications";
 
 import "@xyflow/react/dist/style.css";
-import { Notifications } from "./Notifications";
 
 type Props = {
   wallets: Wallet[];
@@ -88,6 +89,8 @@ export const GraphComponent = ({ wallets }: Props) => {
       <Notifications />
 
       <Controls />
+
+      <Links />
     </ReactFlow>
   );
 };
