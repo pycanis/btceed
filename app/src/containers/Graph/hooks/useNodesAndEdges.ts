@@ -165,7 +165,7 @@ export const useNodesAndEdges = () => {
 
   const populateNodesAndEdges = useCallback(
     (wallet: Wallet, nodes: Record<string, PositionlessNode>, edges: Record<string, Edge>) => {
-      const xpub = wallet.hdKey.publicExtendedKey;
+      const xpub = wallet.xpub;
 
       const xpubTransactionIds = new Set(
         Object.values(addressEntries)

@@ -26,7 +26,7 @@ export const XpubNode = ({ id, data }: NodeProps<XpubNodeType>) => {
   const { settings, isDarkMode } = useSettingsContext();
   const { labels } = useGraphContext();
 
-  const xpub = useMemo(() => data.wallet.hdKey.publicExtendedKey, [data]);
+  const xpub = useMemo(() => data.wallet.xpub, [data]);
 
   const label = useMemo(() => labels[xpub] ?? "", [labels, xpub]);
 

@@ -1,136 +1,169 @@
 import { useQuery } from "@tanstack/react-query";
-import { MutableRefObject, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
 import useWebSocket, { Options } from "react-use-websocket";
 import {
   GAP_LIMIT,
-  GET_DB_XPUBS,
+  GET_DB_WALLETS,
   GET_HISTORY,
   GET_TRANSACTION,
   SATS_IN_BTC,
   VITE_ELECTRUM_WS_SERVER_URL,
 } from "../../../constants";
 import { AddressEntry, HistoryItem, Transaction, Wallet } from "../../../types";
-import { getWallet } from "../../../utils/wallet";
+import { electrumResponseSchema } from "../../../validators";
 import { useDatabaseContext } from "../../DatabaseContext";
 import { useAddressService } from "./useAddressService";
 
 type XpubLastActiveIndexes = Record<string, { receive: number; change: number }>;
 
 type State = {
+  wallets: Wallet[];
   addressEntries: Record<string, AddressEntry>;
   transactions: Record<string, Transaction>;
   xpubLastActiveIndexes: XpubLastActiveIndexes;
 };
 
+type GetHistoriesData = { id: string; result: HistoryItem[] };
+
 type GetHistoryAction = {
-  type: "getHistory";
+  type: "getHistories";
   payload: {
-    scriptHash: string;
-    historyItems: HistoryItem[];
-    isChange: boolean;
-    index: number;
+    data: GetHistoriesData[];
+    deriveAddressRange: (wallet: Wallet, isChange: boolean, startIndex?: number, limit?: number) => AddressEntry[];
   };
 };
 
 type GetTransactionAction = {
-  type: "getTransaction";
-  payload: { transaction: Transaction };
-};
-
-type GetAdditionalAddressEntriesAction = {
-  type: "getAdditionalAddressEntries";
-  payload: { additionalAddressEntries: AddressEntry[] };
+  type: "getTransactions";
+  payload: { transactions: Transaction[] };
 };
 
 type WalletsUpdatedAction = {
-  type: "walletsUpdatedAction";
+  type: "walletsUpdated";
   payload: {
     wallets: Wallet[];
     deriveAddressRange: (wallet: Wallet, isChange: boolean, startIndex?: number, limit?: number) => AddressEntry[];
-    getAddressEntriesHistory: (addressEntries: AddressEntry[]) => void;
-    previousAddressesLoaded: MutableRefObject<boolean>;
   };
 };
 
-type Action = GetHistoryAction | GetTransactionAction | GetAdditionalAddressEntriesAction | WalletsUpdatedAction;
+type Action = GetHistoryAction | GetTransactionAction | WalletsUpdatedAction;
 
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case "getHistory": {
-      const { scriptHash, historyItems, isChange, index } = action.payload;
+    case "getHistories": {
+      const { addressEntries, xpubLastActiveIndexes } = action.payload.data.reduce(
+        (acc, { id, result }) => {
+          const [_, scriptHash, indexParam, isChangeParam] = id.split("-");
 
-      const addressEntryToUpdate = Object.values(state.addressEntries).find((a) => a.scriptHash === scriptHash)!;
+          const addressEntryToUpdate = Object.values(acc.addressEntries).find((a) => a.scriptHash === scriptHash)!;
 
-      const addressEntries = {
-        ...state.addressEntries,
-        [addressEntryToUpdate.address]: {
-          ...addressEntryToUpdate,
-          transactionIds: historyItems.map((item) => item.tx_hash),
+          const index = Number(indexParam);
+          const isChange = isChangeParam === "true";
+
+          acc.addressEntries[addressEntryToUpdate.address] = {
+            ...addressEntryToUpdate,
+            transactionIds: result.map((item) => item.tx_hash),
+          };
+
+          if (result.length > 0) {
+            const indexesToUpdate = acc.xpubLastActiveIndexes[addressEntryToUpdate.xpub];
+
+            acc.xpubLastActiveIndexes[addressEntryToUpdate.xpub] = {
+              receive: !isChange && index > indexesToUpdate.receive ? index : indexesToUpdate.receive,
+              change: isChange && index > indexesToUpdate.change ? index : indexesToUpdate.change,
+            };
+          }
+
+          return acc;
         },
+        { addressEntries: state.addressEntries, xpubLastActiveIndexes: state.xpubLastActiveIndexes }
+      );
+
+      const getAdditionalAddressEntries = (isChange: boolean) => {
+        const additionalAddressEntries: AddressEntry[] = [];
+
+        for (const wallet of state.wallets) {
+          const addressEntriesByType = Object.values(state.addressEntries).filter(
+            (addressEntry) => addressEntry.xpub === wallet.xpub && addressEntry.isChange === isChange
+          );
+
+          const xpubLastActiveIndex = state.xpubLastActiveIndexes[wallet.xpub];
+
+          if (!xpubLastActiveIndex) {
+            continue;
+          }
+
+          const lastActiveIndex = isChange ? xpubLastActiveIndex.change : xpubLastActiveIndex.receive;
+
+          const limitDiff = addressEntriesByType.length - GAP_LIMIT;
+
+          if (limitDiff < 0) {
+            continue;
+          }
+
+          const missingAddressesCount = lastActiveIndex + 1 - limitDiff;
+
+          if (missingAddressesCount <= 0) {
+            continue;
+          }
+
+          additionalAddressEntries.push(
+            ...action.payload.deriveAddressRange(wallet, isChange, addressEntriesByType.length, missingAddressesCount)
+          );
+        }
+
+        return additionalAddressEntries;
       };
 
-      let xpubLastActiveIndexes = state.xpubLastActiveIndexes;
+      const additionalAddressEntries = [...getAdditionalAddressEntries(false), ...getAdditionalAddressEntries(true)];
 
-      if (historyItems.length > 0) {
-        const indexesToUpdate = xpubLastActiveIndexes[addressEntryToUpdate.xpub];
+      const addressEntriesWithAdditional = additionalAddressEntries.reduce((acc, addressEntry) => {
+        acc[addressEntry.address] = addressEntry;
 
-        xpubLastActiveIndexes = {
-          ...xpubLastActiveIndexes,
-          [addressEntryToUpdate.xpub]: {
-            receive: !isChange && index > indexesToUpdate.receive ? index : indexesToUpdate.receive,
-            change: isChange && index > indexesToUpdate.change ? index : indexesToUpdate.change,
-          },
-        };
-      }
+        return acc;
+      }, addressEntries);
 
       return {
         ...state,
-        addressEntries,
+        addressEntries: addressEntriesWithAdditional,
         xpubLastActiveIndexes,
       };
     }
 
-    case "getTransaction": {
-      const { transaction } = action.payload;
-
-      const transactions = {
-        ...state.transactions,
-        [transaction.txid]: transaction,
-      };
+    case "getTransactions": {
+      const { transactions } = action.payload;
 
       return {
         ...state,
-        transactions,
+        transactions: transactions.reduce((acc, transaction) => {
+          acc[transaction.txid] = transaction;
+
+          return acc;
+        }, state.transactions),
       };
     }
 
-    case "getAdditionalAddressEntries": {
-      const { additionalAddressEntries } = action.payload;
+    case "walletsUpdated": {
+      const { wallets, deriveAddressRange } = action.payload;
 
-      const addressEntries = additionalAddressEntries.reduce((acc, address) => {
-        acc[address.address] = address;
-
-        return acc;
-      }, state.addressEntries);
-
-      return { ...state, addressEntries };
-    }
-
-    case "walletsUpdatedAction": {
-      const { wallets, deriveAddressRange, getAddressEntriesHistory, previousAddressesLoaded } = action.payload;
-
-      const addedWallet = wallets.find(
-        (wallet) => !Object.keys(state.xpubLastActiveIndexes).some((xpub) => xpub === wallet.hdKey.publicExtendedKey)
+      const addedWallets = wallets.filter(
+        (wallet) => !Object.keys(state.xpubLastActiveIndexes).some((xpub) => xpub === wallet.xpub)
       );
 
-      if (addedWallet) {
-        const addressEntries = [...deriveAddressRange(addedWallet, false), ...deriveAddressRange(addedWallet, true)];
+      if (addedWallets.length > 0) {
+        const addressEntries = addedWallets.flatMap((wallet) => [
+          ...deriveAddressRange(wallet, false),
+          ...deriveAddressRange(wallet, true),
+        ]);
 
-        getAddressEntriesHistory(addressEntries);
-        previousAddressesLoaded.current = false;
+        const xpubLastActiveIndexes = addedWallets.reduce((acc, wallet) => {
+          acc[wallet.xpub] = { receive: 0, change: 0 };
+          return acc;
+        }, {} as XpubLastActiveIndexes);
 
         return {
           ...state,
+          wallets,
           addressEntries: {
             ...state.addressEntries,
             ...addressEntries.reduce((acc, addressEntry) => {
@@ -141,13 +174,13 @@ const reducer = (state: State, action: Action): State => {
           },
           xpubLastActiveIndexes: {
             ...state.xpubLastActiveIndexes,
-            [addedWallet.hdKey.publicExtendedKey]: { receive: 0, change: 0 },
+            ...xpubLastActiveIndexes,
           },
         };
       }
 
       const removedXpub = Object.keys(state.xpubLastActiveIndexes).find(
-        (xpub) => !wallets.some((wallet) => wallet.hdKey.publicExtendedKey === xpub)
+        (xpub) => !wallets.some((wallet) => wallet.xpub === xpub)
       );
 
       const addressEntriesCopy = { ...state.addressEntries };
@@ -192,7 +225,7 @@ const reducer = (state: State, action: Action): State => {
       });
 
       return {
-        ...state,
+        wallets,
         addressEntries: addressEntriesCopy,
         transactions: transactionsCopy,
         xpubLastActiveIndexes: xpubLastActiveIndexesCopy,
@@ -208,63 +241,56 @@ export const useAddressEntriesAndTransactions = () => {
   const { db } = useDatabaseContext();
   const { deriveAddressRange } = useAddressService();
 
-  const { data: xpubStoreValues = [] } = useQuery({
-    queryKey: [GET_DB_XPUBS],
-    queryFn: () => db.getAllFromIndex("xpubs", "createdAt"),
+  const { data: wallets = [] } = useQuery({
+    queryKey: [GET_DB_WALLETS],
+    queryFn: () => db.getAllFromIndex("wallets", "createdAt"),
   });
 
-  const wallets = useMemo(() => xpubStoreValues.map(getWallet), [xpubStoreValues]);
-
   const [state, dispatch] = useReducer(reducer, {
+    wallets: [],
     addressEntries: {},
     xpubLastActiveIndexes: {},
     transactions: {},
-  } as State);
+  });
 
-  const previousAddressesLoaded = useRef(false);
-  const [initialTransactionsLoaded, setInitialTransactionsLoaded] = useState(false);
+  const handleElectrumMessage = useCallback(
+    (event: WebSocketEventMap["message"]) => {
+      const data = JSON.parse(event.data);
 
-  const handleElectrumMessage = useCallback((event: WebSocketEventMap["message"]) => {
-    const { id, result } = JSON.parse(event.data) as { id: string; result: unknown };
+      const validData = electrumResponseSchema.parse(data);
 
-    if (!id) {
-      return;
-    }
-
-    const [method, ...params] = id.split("-");
-
-    switch (method) {
-      case GET_HISTORY: {
-        const [scriptHash, indexParam, isChangeParam] = params;
-
-        const historyItems = result as HistoryItem[];
-
-        dispatch({
-          type: "getHistory",
-          payload: {
-            scriptHash,
-            historyItems,
-            isChange: isChangeParam === "true",
-            index: Number(indexParam),
-          },
-        });
-
-        break;
+      if (validData.length === 0) {
+        return;
       }
 
-      case GET_TRANSACTION: {
-        const transaction = result as Transaction;
+      const [method] = validData[0].id.split("-");
 
-        dispatch({ type: "getTransaction", payload: { transaction } });
+      switch (method) {
+        case GET_HISTORY: {
+          dispatch({
+            type: "getHistories",
+            payload: { data: validData as GetHistoriesData[], deriveAddressRange },
+          });
 
-        break;
+          break;
+        }
+
+        case GET_TRANSACTION: {
+          dispatch({
+            type: "getTransactions",
+            payload: { transactions: validData.map((data) => data.result) as Transaction[] },
+          });
+
+          break;
+        }
+
+        default: {
+          console.error("Unknown message.");
+        }
       }
-
-      default: {
-        console.error("Unknown message.");
-      }
-    }
-  }, []);
+    },
+    [deriveAddressRange]
+  );
 
   const electrumWsOptions = useMemo<Options>(
     () => ({
@@ -283,85 +309,46 @@ export const useAddressEntriesAndTransactions = () => {
 
   const getAddressEntriesHistory = useCallback(
     (addressEntries: AddressEntry[]) => {
-      for (const addressEntry of addressEntries) {
-        sendJsonMessage({
-          id: `${GET_HISTORY}-${addressEntry.scriptHash}-${addressEntry.index}-${addressEntry.isChange}`,
-          method: GET_HISTORY,
-          params: [addressEntry.scriptHash],
-        });
-      }
+      const requestData = addressEntries.map((addressEntry) => ({
+        id: `${GET_HISTORY}-${addressEntry.scriptHash}-${addressEntry.index}-${addressEntry.isChange}`,
+        method: GET_HISTORY,
+        params: [addressEntry.scriptHash],
+      }));
+
+      sendJsonMessage(requestData);
     },
     [sendJsonMessage]
   );
 
-  const getAdditionalAddressEntries = useCallback(
-    (isChange: boolean) => {
-      for (const wallet of wallets) {
-        const xpub = wallet.hdKey.publicExtendedKey;
-
-        const addressEntriesByType = Object.values(state.addressEntries).filter(
-          (addressEntry) => addressEntry.xpub === xpub && addressEntry.isChange === isChange
-        );
-
-        const xpubLastActiveIndex = state.xpubLastActiveIndexes[xpub];
-
-        if (!xpubLastActiveIndex) {
-          continue;
-        }
-
-        const lastActiveIndex = isChange ? xpubLastActiveIndex.change : xpubLastActiveIndex.receive;
-
-        const limitDiff = addressEntriesByType.length - GAP_LIMIT;
-
-        if (limitDiff < 0) {
-          continue;
-        }
-
-        const missingAddressesCount = lastActiveIndex + 1 - limitDiff;
-
-        if (missingAddressesCount <= 0) {
-          continue;
-        }
-
-        const derivedAddressEntries = deriveAddressRange(
-          wallet,
-          isChange,
-          addressEntriesByType.length,
-          missingAddressesCount
-        );
-
-        dispatch({ type: "getAdditionalAddressEntries", payload: { additionalAddressEntries: derivedAddressEntries } });
-
-        getAddressEntriesHistory(derivedAddressEntries);
-      }
-    },
-    [state, deriveAddressRange, getAddressEntriesHistory, wallets]
-  );
-
   useEffect(() => {
     dispatch({
-      type: "walletsUpdatedAction",
-      payload: { wallets, deriveAddressRange, getAddressEntriesHistory, previousAddressesLoaded },
+      type: "walletsUpdated",
+      payload: { wallets, deriveAddressRange },
     });
-  }, [wallets, deriveAddressRange, getAddressEntriesHistory]);
+  }, [wallets, deriveAddressRange]);
 
   useEffect(() => {
-    getAdditionalAddressEntries(false);
-    getAdditionalAddressEntries(true);
-  }, [getAdditionalAddressEntries]);
+    const addressEntriesWithoutHistoryData = Object.values(state.addressEntries).filter(
+      (addressEntry) => !addressEntry.transactionIds
+    );
 
-  const addressesLoaded = useMemo(
-    () => Object.values(state.addressEntries).every((addressEntry) => !!addressEntry.transactionIds),
-    [state]
-  );
-
-  useEffect(() => {
-    if (!addressesLoaded || previousAddressesLoaded.current) {
+    if (addressEntriesWithoutHistoryData.length === 0) {
       return;
     }
 
-    previousAddressesLoaded.current = true;
-    setInitialTransactionsLoaded(true);
+    getAddressEntriesHistory(addressEntriesWithoutHistoryData);
+  }, [state, getAddressEntriesHistory]);
+
+  const addressesLoaded = useMemo(() => {
+    const addressEntries = Object.values(state.addressEntries);
+
+    return addressEntries.length > 0 && addressEntries.every((addressEntry) => !!addressEntry.transactionIds);
+  }, [state]);
+
+  useEffect(() => {
+    if (!addressesLoaded) {
+      return;
+    }
 
     const transactionIdsToLoad = new Set(
       Object.values(state.addressEntries)
@@ -369,13 +356,17 @@ export const useAddressEntriesAndTransactions = () => {
         .filter((transactionId) => !state.transactions[transactionId!])
     );
 
-    for (const transactionId of transactionIdsToLoad) {
-      sendJsonMessage({
-        id: GET_TRANSACTION,
-        method: GET_TRANSACTION,
-        params: [transactionId, true],
-      });
+    if (transactionIdsToLoad.size === 0) {
+      return;
     }
+
+    const requestData = Array.from(transactionIdsToLoad).map((transactionId) => ({
+      id: `${GET_TRANSACTION}-${transactionId}`,
+      method: GET_TRANSACTION,
+      params: [transactionId, true],
+    }));
+
+    sendJsonMessage(requestData);
   }, [sendJsonMessage, addressesLoaded, state]);
 
   const transactionsLoaded = useMemo(
@@ -475,13 +466,12 @@ export const useAddressEntriesAndTransactions = () => {
       isSpendingTransaction,
       calculateTransactionSpentInSats,
       calculateTransactionReceivedInSats,
-      isLoading: !addressesLoaded || !transactionsLoaded || !initialTransactionsLoaded,
+      isLoading: !addressesLoaded || !transactionsLoaded,
     }),
     [
       state,
       addressesLoaded,
       transactionsLoaded,
-      initialTransactionsLoaded,
       adjacentAddressEntries,
       calculateTransactionFeeInSats,
       isSpendingTransaction,

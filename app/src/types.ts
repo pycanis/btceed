@@ -1,6 +1,7 @@
-import { HDKey } from "@scure/bip32";
 import { Node } from "@xyflow/react";
 import { DBSchema } from "idb";
+import { TypeOf } from "zod";
+import { historySchema, transactionSchema } from "./validators";
 
 export enum ScriptType {
   P2PKH = "P2PKH",
@@ -9,36 +10,9 @@ export enum ScriptType {
   P2TR = "P2TR",
 }
 
-export type Vin = {
-  scriptSig: { asm: string; hex: string };
-  sequence: number;
-  txid: string;
-  txwitness: string[];
-  vout: number;
-};
+export type Transaction = TypeOf<typeof transactionSchema>;
 
-export type Vout = {
-  n: number;
-  value: number;
-  scriptPubKey: { address: string; asm: string; desc: string; hex: string; type: string };
-};
-
-export type Transaction = {
-  txid: string;
-  blockhash: string;
-  blocktime: number;
-  confirmations: number;
-  hash: string;
-  hex: string;
-  locktime: number;
-  size: number;
-  time: number;
-  version: number;
-  vsize: number;
-  weight: number;
-  vin: Vin[];
-  vout: Vout[];
-};
+export type HistoryItem = TypeOf<typeof historySchema>;
 
 export type AddressEntry = {
   address: string;
@@ -47,11 +21,6 @@ export type AddressEntry = {
   index: number;
   transactionIds?: string[];
   xpub: string;
-};
-
-export type HistoryItem = {
-  tx_hash: string;
-  height: number;
 };
 
 export type PositionlessNode = Omit<Node, "position">;
@@ -83,7 +52,7 @@ export type AddressNodeType = "xpubAddress" | "changeAddress" | "externalAddress
 export type Direction = "TB" | "LR" | "RL" | "BT";
 
 export type Wallet = {
-  hdKey: HDKey;
+  xpub: string;
   scriptType: ScriptType;
 };
 
@@ -96,7 +65,7 @@ export type NodeColors = {
   externalAddress: string;
 };
 
-export type XpubStoreValue = { xpub: string; scriptType: ScriptType; createdAt: number };
+export type WalletsStoreValue = { xpub: string; scriptType: ScriptType; createdAt: number };
 
 export type SettingsStoreValue = {
   panOnScroll: boolean;
@@ -128,7 +97,7 @@ export enum Currencies {
 export type ExchangeRatesStoreValue = { tsInSeconds: number; rates: Record<Currencies, number> };
 
 export interface DatabaseSchema extends DBSchema {
-  xpubs: { key: string; value: XpubStoreValue; indexes: { createdAt: number } };
+  wallets: { key: string; value: WalletsStoreValue; indexes: { createdAt: number } };
   settings: { key: number; value: SettingsStoreValue };
   labels: { key: string; value: LabelStoreValue };
   exchangeRates: { key: number; value: ExchangeRatesStoreValue };

@@ -1,5 +1,6 @@
 import { sha256 } from "@noble/hashes/sha256";
 import { hex } from "@scure/base";
+import { HDKey } from "@scure/bip32";
 import { initEccLib, payments } from "bitcoinjs-lib";
 import { useCallback, useMemo } from "react";
 import { isXOnlyPoint, xOnlyPointAddTweak } from "tiny-secp256k1";
@@ -34,7 +35,9 @@ export const useAddressService = () => {
 
   const deriveAddress = useCallback(
     (wallet: Wallet, index: number, isChange: boolean): AddressEntry => {
-      const { publicKey } = wallet.hdKey.deriveChild(isChange ? 1 : 0).deriveChild(index);
+      const { publicKey } = HDKey.fromExtendedKey(wallet.xpub)
+        .deriveChild(isChange ? 1 : 0)
+        .deriveChild(index);
 
       if (!publicKey) {
         throw new Error(`Failed to derive public key for index ${index}`);
@@ -51,7 +54,7 @@ export const useAddressService = () => {
         scriptHash: getScriptHash(output),
         isChange,
         index,
-        xpub: wallet.hdKey.publicExtendedKey,
+        xpub: wallet.xpub,
       };
     },
     [getScriptHash, getPayment]

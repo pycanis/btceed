@@ -8,7 +8,7 @@ import { Form } from "../components/Form";
 import { Input } from "../components/Input";
 import { Modal } from "../components/Modal";
 import { SelectInput, SelectOption } from "../components/SelectInput";
-import { GET_DB_LABELS, GET_DB_XPUBS } from "../constants";
+import { GET_DB_LABELS, GET_DB_WALLETS } from "../constants";
 import { useDatabaseContext } from "../contexts/DatabaseContext";
 import { ScriptType } from "../types";
 
@@ -28,13 +28,13 @@ type FormValues = TypeOf<typeof schema>;
 
 type Props = { onClose?: () => void };
 
-export const XpubFormModal = ({ onClose }: Props) => {
+export const WalletFormModal = ({ onClose }: Props) => {
   const { db } = useDatabaseContext();
   const queryClient = useQueryClient();
 
   const handleSubmit = useCallback(
     async ({ xpub, scriptType, label }: FormValues) => {
-      const existingXpub = await db.get("xpubs", xpub);
+      const existingXpub = await db.get("wallets", xpub);
 
       if (existingXpub) {
         return alert("Xpub already exists.");
@@ -43,7 +43,7 @@ export const XpubFormModal = ({ onClose }: Props) => {
       try {
         HDKey.fromExtendedKey(xpub);
 
-        await db.add("xpubs", { xpub, scriptType, createdAt: Date.now() });
+        await db.add("wallets", { xpub, scriptType, createdAt: Date.now() });
 
         if (label) {
           await db.add("labels", { label, id: xpub });
@@ -51,7 +51,7 @@ export const XpubFormModal = ({ onClose }: Props) => {
           await queryClient.invalidateQueries({ queryKey: [GET_DB_LABELS] });
         }
 
-        await queryClient.invalidateQueries({ queryKey: [GET_DB_XPUBS] });
+        await queryClient.invalidateQueries({ queryKey: [GET_DB_WALLETS] });
       } catch (_) {
         alert("Invalid xpub.");
       }

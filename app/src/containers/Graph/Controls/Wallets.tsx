@@ -1,14 +1,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "../../../components/Button";
 import { Popover } from "../../../components/Popover";
-import { GET_DB_XPUBS } from "../../../constants";
+import { GET_DB_WALLETS } from "../../../constants";
 import { useDatabaseContext } from "../../../contexts/DatabaseContext";
 import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 import { WalletIcon } from "../../../icons/Wallet";
 import { truncateMiddleString, truncateString } from "../../../utils/strings";
-import { getWallet } from "../../../utils/wallet";
-import { XpubFormModal } from "../../XpubFormModal";
+import { WalletFormModal } from "../../WalletFormModal";
 import { ControlButton } from "./ControlButton";
 import { ControlPopoverLayout } from "./ControlPopoverLayout";
 
@@ -18,21 +17,19 @@ export const Wallets = () => {
   const [addWalletModalOpened, setAddWalletModalOpened] = useState(false);
   const { labels } = useGraphContext();
 
-  const { data = [] } = useQuery({
-    queryKey: [GET_DB_XPUBS],
-    queryFn: () => db.getAllFromIndex("xpubs", "createdAt"),
+  const { data: wallets = [] } = useQuery({
+    queryKey: [GET_DB_WALLETS],
+    queryFn: () => db.getAllFromIndex("wallets", "createdAt"),
   });
 
   const handleDelete = useCallback(
     async (xpub: string) => {
-      await db.delete("xpubs", xpub);
+      await db.delete("wallets", xpub);
 
-      await queryClient.invalidateQueries({ queryKey: [GET_DB_XPUBS] });
+      await queryClient.invalidateQueries({ queryKey: [GET_DB_WALLETS] });
     },
     [db, queryClient]
   );
-
-  const wallets = useMemo(() => data.map(getWallet), [data]);
 
   return (
     <>
@@ -47,17 +44,9 @@ export const Wallets = () => {
         <ControlPopoverLayout header="Wallets">
           {wallets.map((wallet, i) => (
             <div key={i} className="flex justify-between">
-              <p>
-                {labels[wallet.hdKey.publicExtendedKey]
-                  ? truncateString(labels[wallet.hdKey.publicExtendedKey])
-                  : truncateMiddleString(wallet.hdKey.publicExtendedKey)}
-              </p>
+              <p>{labels[wallet.xpub] ? truncateString(labels[wallet.xpub]) : truncateMiddleString(wallet.xpub)}</p>
 
-              <Button
-                className="ml-2 text-red-500"
-                variant="text"
-                onClick={() => handleDelete(wallet.hdKey.publicExtendedKey)}
-              >
+              <Button className="ml-2 text-red-500" variant="text" onClick={() => handleDelete(wallet.xpub)}>
                 X
               </Button>
             </div>
@@ -69,7 +58,7 @@ export const Wallets = () => {
         </ControlPopoverLayout>
       </Popover>
 
-      {addWalletModalOpened && <XpubFormModal onClose={() => setAddWalletModalOpened(false)} />}
+      {addWalletModalOpened && <WalletFormModal onClose={() => setAddWalletModalOpened(false)} />}
     </>
   );
 };

@@ -13,7 +13,7 @@ export const GET_TRANSACTION = "blockchain.transaction.get";
 export const DB_NAME = "main";
 export const DB_VERSION = 1;
 
-export const GET_DB_XPUBS = "xpubs";
+export const GET_DB_WALLETS = "wallets";
 export const GET_DB_SETTINGS = "settings";
 export const GET_DB_LABELS = "labels";
 export const GET_DB_EXCHANGE_RATES = "exchangeRates";
