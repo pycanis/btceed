@@ -19,23 +19,23 @@ wss.on("connection", (ws) => {
   ws.on("message", (message) => {
     const stringifiedMessage = message.toString();
 
-    console.log("Received from WebSocket:", stringifiedMessage);
-
     tcpSocket.write(stringifiedMessage + "\n");
   });
 
+  let buffer = "";
+
   tcpSocket.on("data", (data) => {
-    const stringifiedData = data.toString();
+    buffer += data.toString();
 
-    console.log("Received from TCP:", stringifiedData);
-
-    const split = stringifiedData.replace(/\r\n/g, "\n").split("\n").filter(Boolean);
-
-    console.log(split);
-
-    for (const chunk of split) {
-      ws.send(chunk);
+    if (!buffer.includes("\n")) {
+      return;
     }
+
+    const [message, rest] = buffer.replace(/\r\n/g, "\n").split("\n", 2);
+
+    buffer = rest;
+
+    ws.send(message);
   });
 
   tcpSocket.on("end", () => {

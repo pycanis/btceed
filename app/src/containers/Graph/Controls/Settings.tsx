@@ -16,8 +16,8 @@ import { useDatabaseContext } from "../../../contexts/DatabaseContext";
 import { useSettingsContext } from "../../../contexts/SettingsContext";
 import { SettingsIcon } from "../../../icons/Settings";
 import { ColorScheme, Currencies, Direction, NodeType } from "../../../types";
+import { GraphPopoverLayout } from "../GraphPopoverLayout";
 import { ControlButton } from "./ControlButton";
-import { ControlPopoverLayout } from "./ControlPopoverLayout";
 
 const nodeColorsSchema = z.object({
   xpubNode: z.string(),
@@ -63,11 +63,11 @@ export const Settings = () => {
         </ControlButton>
       }
     >
-      <ControlPopoverLayout header="Settings">
+      <GraphPopoverLayout header="Settings">
         <Form<FormValues> resolver={zodResolver(schema)} defaultValues={settings}>
           <FormFields />
         </Form>
-      </ControlPopoverLayout>
+      </GraphPopoverLayout>
     </Popover>
   );
 };

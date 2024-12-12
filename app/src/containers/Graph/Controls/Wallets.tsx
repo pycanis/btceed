@@ -8,8 +8,8 @@ import { useGraphContext } from "../../../contexts/GraphContext/GraphContext";
 import { WalletIcon } from "../../../icons/Wallet";
 import { truncateMiddleString, truncateString } from "../../../utils/strings";
 import { WalletFormModal } from "../../WalletFormModal";
+import { GraphPopoverLayout } from "../GraphPopoverLayout";
 import { ControlButton } from "./ControlButton";
-import { ControlPopoverLayout } from "./ControlPopoverLayout";
 
 export const Wallets = () => {
   const { db } = useDatabaseContext();
@@ -41,7 +41,7 @@ export const Wallets = () => {
           </ControlButton>
         }
       >
-        <ControlPopoverLayout header="Wallets">
+        <GraphPopoverLayout header="Wallets">
           {wallets.map((wallet, i) => (
             <div key={i} className="flex justify-between">
               <p>{labels[wallet.xpub] ? truncateString(labels[wallet.xpub]) : truncateMiddleString(wallet.xpub)}</p>
@@ -55,7 +55,7 @@ export const Wallets = () => {
           <Button className="w-full mt-4" size="sm" onClick={() => setAddWalletModalOpened(true)}>
             Add wallet
           </Button>
-        </ControlPopoverLayout>
+        </GraphPopoverLayout>
       </Popover>
 
       {addWalletModalOpened && <WalletFormModal onClose={() => setAddWalletModalOpened(false)} />}
