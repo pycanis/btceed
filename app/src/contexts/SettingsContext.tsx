@@ -16,6 +16,8 @@ type Props = {
   children: ReactNode;
 };
 
+const faviconElement = document.getElementById("favicon") as HTMLLinkElement;
+
 export const SettingsProvider = ({ children }: Props) => {
   const { db } = useDatabaseContext();
   const [isDarkMode, setIsDarkMode] = useState(document.documentElement.classList.contains("dark"));
@@ -29,6 +31,8 @@ export const SettingsProvider = ({ children }: Props) => {
 
   const handleColorSchemeChange = useCallback((isDark: boolean, colorScheme: ColorScheme) => {
     document.documentElement.classList.toggle("dark", colorScheme === "dark" || (colorScheme === "system" && isDark));
+
+    faviconElement.href = isDark ? "/favicon.svg" : "/favicon-dark.svg";
 
     setIsDarkMode(document.documentElement.classList.contains("dark"));
   }, []);

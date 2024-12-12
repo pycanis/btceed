@@ -53,7 +53,15 @@ export const Controls = () => {
         </div>
       </Panel>
 
-      {settings.miniMap && <MiniMap zoomable pannable position="bottom-left" nodeColor={getNodeColor} />}
+      {settings.miniMap && (
+        <MiniMap
+          zoomable
+          pannable
+          position="bottom-left"
+          className="bg-text dark:bg-darkText"
+          nodeColor={getNodeColor}
+        />
+      )}
     </>
   );
 };

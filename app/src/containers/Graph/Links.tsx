@@ -55,7 +55,7 @@ export const Links = () => {
       </Popover>
 
       <Link
-        href="https://github.com"
+        href="https://github.com/pycanis/btceed"
         target="_blank"
         className="mt-2 hover:brightness-150 hover:dark:brightness-95 transition bg-bg dark:bg-darkBg rounded-full"
       >

@@ -1,14 +1,14 @@
 services:
   app:
-    container_name: btc-viz-app
-    image: btc-viz-app
+    container_name: btceed-app
+    image: btceed-app
     build: app
     ports:
       - "5234:80"
 
   proxy:
-    container_name: btc-viz-proxy
-    image: btc-viz-proxy
+    container_name: btceed-proxy
+    image: btceed-proxy
     build: proxy
     ports:
       - "7000:80"
