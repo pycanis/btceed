@@ -23,12 +23,12 @@ type State = {
   xpubLastActiveIndexes: XpubLastActiveIndexes;
 };
 
-type GetHistoriesData = { id: string; result: HistoryItem[] };
+type HistoryData = { id: string; result: HistoryItem[] }[];
 
 type GetHistoryAction = {
   type: "getHistories";
   payload: {
-    data: GetHistoriesData[];
+    data: HistoryData;
     deriveAddressRange: (wallet: Wallet, isChange: boolean, startIndex?: number, limit?: number) => AddressEntry[];
   };
 };
@@ -269,7 +269,7 @@ export const useAddressEntriesAndTransactions = () => {
         case GET_HISTORY: {
           dispatch({
             type: "getHistories",
-            payload: { data: validData as GetHistoriesData[], deriveAddressRange },
+            payload: { data: validData as HistoryData, deriveAddressRange },
           });
 
           break;

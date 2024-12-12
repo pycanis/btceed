@@ -22,6 +22,7 @@ export const useCsvExport = () => {
       calculateTransactionFeeInSats,
     },
     exchangeRates,
+    labels,
     setIsCsvExportLoading,
   } = useGraphContext();
 
@@ -52,6 +53,7 @@ export const useCsvExport = () => {
   const getCsvData = useCallback(async () => {
     const headers = [
       "Transaction ID",
+      "Labels",
       "Date",
       `Value (${settings.valuesInSats ? "sats" : "BTC"})`,
       ...(settings.currency ? [`Fiat value (${settings.currency})`] : []),
@@ -66,6 +68,11 @@ export const useCsvExport = () => {
 
     for (const transaction of Object.values(transactions).sort((a, b) => a.time - b.time)) {
       const isSpending = isSpendingTransaction(transaction);
+
+      const foundLabels = transaction.vout
+        .map((vout) => labels[vout.scriptPubKey.address] ?? "")
+        .filter(Boolean)
+        .join(",");
 
       const valueInSats = isSpending
         ? calculateTransactionSpentInSats(transaction)
@@ -87,6 +94,7 @@ export const useCsvExport = () => {
 
       const row = [
         transaction.txid,
+        foundLabels,
         new Date(transaction.time * 1000).toLocaleString(),
         btcValue,
         ...(settings.currency ? [fiatValue] : []),
@@ -107,6 +115,7 @@ export const useCsvExport = () => {
     transactions,
     settings.currency,
     settings.valuesInSats,
+    labels,
     queryClient,
     isSpendingTransaction,
     calculateTransactionFeeInSats,
