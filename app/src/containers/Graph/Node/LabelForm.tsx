@@ -39,7 +39,7 @@ export const LabelForm = ({ id, label, onSubmit }: Props) => {
   return (
     <Form<FormValues> defaultValues={{ label }} resolver={zodResolver(schema)} onSubmit={handleSubmit}>
       <div className="flex items-center">
-        <Input name="label" />
+        <Input name="label" autoFocus />
 
         <Button className="ml-2" variant="text" type="submit">
           <CheckmarkIcon />

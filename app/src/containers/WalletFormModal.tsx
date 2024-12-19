@@ -62,7 +62,7 @@ export const WalletFormModal = ({ onClose }: Props) => {
   return (
     <Modal header="Add wallet" onClose={onClose}>
       <Form onSubmit={handleSubmit} resolver={zodResolver(schema)}>
-        <Input name="xpub" label="Xpub" placeholder="xpub6.." className="mb-2" />
+        <Input name="xpub" label="Xpub" placeholder="xpub6.." className="mb-2" autoFocus />
 
         <SelectInput name="scriptType" label="Script type" options={scriptTypeOptions} className="mb-2" />
 
