@@ -9,10 +9,10 @@ export default {
     extend: {
       colors: {
         primary: "#F2A900",
-        bg: "#FFEFD5",
-        text: "#3D2B1F",
-        darkBg: "#030843",
-        darkText: "#E0CEC2"
+        bg: "#f4e4d4",
+        text: "#1b1507",
+        darkBg: "#122445",
+        darkText: "#f8f1e3"
       }
     },
   },

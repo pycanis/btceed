@@ -3,6 +3,7 @@ services:
     container_name: btceed-app
     image: btceed-app
     build: app
+    restart: unless-stopped
     ports:
       - "5234:80"
 
@@ -10,5 +11,6 @@ services:
     container_name: btceed-proxy
     image: btceed-proxy
     build: proxy
+    restart: unless-stopped
     ports:
       - "7000:80"

@@ -1,4 +1,5 @@
 import { Panel } from "@xyflow/react";
+import { Link } from "../../components/Link";
 import { useGraphContext } from "../../contexts/GraphContext/GraphContext";
 
 export const Notifications = () => {
@@ -6,8 +7,15 @@ export const Notifications = () => {
 
   return (
     <Panel className="w-full m-0">
-      {import.meta.env.VITE_PUBLIC_ELECTRUM_SERVER_WARNING && (
-        <div className="px-4 py-2 bg-red-800 text-darkText">{import.meta.env.VITE_PUBLIC_ELECTRUM_SERVER_WARNING}</div>
+      {import.meta.env.VITE_PUBLIC_DISPLAY_PUBLIC_WARNING && (
+        <div className="px-4 py-2 bg-red-800 text-darkText">
+          Warning! This instance is using a public electrum server. You should assume it can see your transactions.
+          Learn about{" "}
+          <Link href="https://docs.btceed.live/self-host" target="_blank">
+            hosting your own instance
+          </Link>
+          .
+        </div>
       )}
 
       {isCsvExportLoading && (
