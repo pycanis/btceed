@@ -8,6 +8,7 @@
     @apply bg-bg;
     @apply dark:text-darkText;
     @apply dark:bg-darkBg;
+    @apply font-sans;
   }
 }
 
