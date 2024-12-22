@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useReducer } from "react";
+import { useErrorBoundary } from "react-error-boundary";
 import useWebSocket, { Options } from "react-use-websocket";
+import { TypeOf } from "zod";
 import {
   GAP_LIMIT,
   GET_DB_WALLETS,
@@ -240,6 +242,7 @@ const reducer = (state: State, action: Action): State => {
 export const useAddressEntriesAndTransactions = () => {
   const { db } = useDatabaseContext();
   const { deriveAddressRange } = useAddressService();
+  const { showBoundary } = useErrorBoundary();
 
   const { data: wallets = [] } = useQuery({
     queryKey: [GET_DB_WALLETS],
@@ -257,7 +260,13 @@ export const useAddressEntriesAndTransactions = () => {
     (event: WebSocketEventMap["message"]) => {
       const data = JSON.parse(event.data);
 
-      const validData = electrumResponseSchema.parse(data);
+      let validData: TypeOf<typeof electrumResponseSchema> = [];
+
+      try {
+        validData = electrumResponseSchema.parse(data);
+      } catch (e) {
+        showBoundary(e);
+      }
 
       if (validData.length === 0) {
         return;
@@ -289,7 +298,7 @@ export const useAddressEntriesAndTransactions = () => {
         }
       }
     },
-    [deriveAddressRange]
+    [deriveAddressRange, showBoundary]
   );
 
   const electrumWsOptions = useMemo<Options>(
