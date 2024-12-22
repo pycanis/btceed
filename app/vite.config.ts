@@ -24,6 +24,23 @@ ensureEnvVariables(["VITE_ELECTRUM_WS_SERVER_URL", "VITE_BLOCKCHAIN_EXPLORER_URL
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), wasm()],
+  plugins: [
+    react(),
+    wasm(),
+    {
+      name: "add-script-tag",
+      transformIndexHtml(html) {
+        const env = loadEnv("production", ".");
+
+        if (env.VITE_ENABLE_ANALYTICS === "true") {
+          return html.replace(
+            "</head>",
+            `  <script defer data-domain="app.btceed.live" src="https://plausible.btceed.live/js/script.js"></script></head>`
+          );
+        }
+        return html;
+      },
+    },
+  ],
   build: { target: "esnext" },
 });
