@@ -1,20 +1,28 @@
 import "dotenv/config";
 
+import net from "net";
 import tls from "tls";
 import WebSocket from "ws";
 
-const { ELECTRUM_HOST, ELECTRUM_PORT } = process.env;
+const { ELECTRUM_HOST, ELECTRUM_PORT, ELECTRUM_USE_SSL } = process.env;
 
 const WS_PORT = 80;
 
 const wss = new WebSocket.Server({ port: WS_PORT });
 
+const connectionOptions = { host: ELECTRUM_HOST, port: Number(ELECTRUM_PORT), rejectUnauthorized: false };
+
 wss.on("connection", (ws) => {
   console.log("New WebSocket connection established.");
 
-  const tcpSocket = tls.connect({ host: ELECTRUM_HOST, port: Number(ELECTRUM_PORT) }, () => {
-    console.log(`Connected to ssl://${ELECTRUM_HOST}:${ELECTRUM_PORT}`);
-  });
+  const tcpSocket =
+    ELECTRUM_USE_SSL === "true"
+      ? tls.connect(connectionOptions, () => {
+          console.log(`Connected to tcp://${ELECTRUM_HOST}:${ELECTRUM_PORT}`);
+        })
+      : net.connect(connectionOptions, () => {
+          console.log(`Connected to ssl://${ELECTRUM_HOST}:${ELECTRUM_PORT}`);
+        });
 
   ws.on("message", (message) => {
     const stringifiedMessage = message.toString();
