@@ -7,6 +7,8 @@ export const GAP_LIMIT = 20;
 
 export const SATS_IN_BTC = 100000000;
 
+export const XPUB_HEX_PREFIX = "0488b21e";
+
 export const GET_HISTORY = "blockchain.scripthash.get_history";
 export const GET_TRANSACTION = "blockchain.transaction.get";
 

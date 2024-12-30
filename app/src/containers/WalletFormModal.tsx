@@ -11,6 +11,7 @@ import { SelectInput, SelectOption } from "../components/SelectInput";
 import { GET_DB_LABELS, GET_DB_WALLETS } from "../constants";
 import { useDatabaseContext } from "../contexts/DatabaseContext";
 import { ScriptType } from "../types";
+import { convertExtendedKeyToXpub } from "../utils/xpub";
 
 const scriptTypeOptions: SelectOption[] = [
   { value: ScriptType.P2WPKH, label: "Native Segwit (P2WPKH)" },
@@ -19,7 +20,7 @@ const scriptTypeOptions: SelectOption[] = [
 ];
 
 const schema = z.object({
-  xpub: z.string().min(1),
+  extendedKey: z.string().min(1),
   scriptType: z.nativeEnum(ScriptType),
   label: z.string().optional(),
 });
@@ -33,7 +34,9 @@ export const WalletFormModal = ({ onClose }: Props) => {
   const queryClient = useQueryClient();
 
   const handleSubmit = useCallback(
-    async ({ xpub, scriptType, label }: FormValues) => {
+    async ({ extendedKey, scriptType, label }: FormValues) => {
+      const xpub = extendedKey.startsWith("xpub") ? extendedKey : convertExtendedKeyToXpub(extendedKey);
+
       const existingXpub = await db.get("wallets", xpub);
 
       if (existingXpub) {
@@ -53,7 +56,7 @@ export const WalletFormModal = ({ onClose }: Props) => {
 
         await queryClient.invalidateQueries({ queryKey: [GET_DB_WALLETS] });
       } catch (_) {
-        alert("Invalid xpub.");
+        alert("Invalid extended key.");
       }
     },
     [db, queryClient]
@@ -62,7 +65,13 @@ export const WalletFormModal = ({ onClose }: Props) => {
   return (
     <Modal header="Add wallet" onClose={onClose}>
       <Form onSubmit={handleSubmit} resolver={zodResolver(schema)}>
-        <Input name="xpub" label="Xpub" placeholder="xpub6.." className="mb-2" autoFocus />
+        <Input
+          name="extendedKey"
+          label="Public extended key (xpub or zpub)"
+          placeholder="xpub/zpub.."
+          className="mb-2"
+          autoFocus
+        />
 
         <SelectInput name="scriptType" label="Script type" options={scriptTypeOptions} className="mb-2" />
 

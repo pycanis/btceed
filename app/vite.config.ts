@@ -1,5 +1,6 @@
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig, loadEnv } from "vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 import wasm from "vite-plugin-wasm";
 
 const ensureEnvVariables = (variables: string[]) => {
@@ -27,6 +28,9 @@ export default defineConfig({
   plugins: [
     react(),
     wasm(),
+    nodePolyfills({
+      include: ["buffer"],
+    }),
     {
       name: "add-script-tag",
       transformIndexHtml(html) {

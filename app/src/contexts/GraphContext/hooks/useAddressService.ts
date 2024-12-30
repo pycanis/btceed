@@ -1,5 +1,4 @@
 import { sha256 } from "@noble/hashes/sha256";
-import { hex } from "@scure/base";
 import { HDKey } from "@scure/bip32";
 import { initEccLib, payments } from "bitcoinjs-lib";
 import { useCallback, useMemo } from "react";
@@ -8,6 +7,11 @@ import { GAP_LIMIT } from "../../../constants";
 import { AddressEntry, ScriptType, Wallet } from "../../../types";
 
 initEccLib({ isXOnlyPoint, xOnlyPointAddTweak });
+
+const uint8ArrayToHex = (uint8Array: Uint8Array) =>
+  Array.from(uint8Array)
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 
 export const useAddressService = () => {
   const getPayment = useCallback((publicKey: Uint8Array, scriptType: ScriptType) => {
@@ -29,9 +33,7 @@ export const useAddressService = () => {
     }
   }, []);
 
-  const getScriptHash = useCallback((output: Uint8Array) => {
-    return hex.encode(sha256(output).reverse());
-  }, []);
+  const getScriptHash = useCallback((output: Uint8Array) => uint8ArrayToHex(sha256(output).reverse()), []);
 
   const deriveAddress = useCallback(
     (wallet: Wallet, index: number, isChange: boolean): AddressEntry => {
