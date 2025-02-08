@@ -14,7 +14,7 @@ export const useCsvExport = () => {
   const queryClient = useQueryClient();
 
   const {
-    addressEntriesAndTransactions: {
+    graphData: {
       transactions,
       isSpendingTransaction,
       calculateTransactionSpentInSats,

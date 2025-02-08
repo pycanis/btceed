@@ -2,6 +2,12 @@ import { Currencies, ScriptType, SettingsStoreValue } from "./types";
 
 export const VITE_ELECTRUM_WS_SERVER_URL = import.meta.env.VITE_ELECTRUM_WS_SERVER_URL;
 export const VITE_BLOCKCHAIN_EXPLORER_URL = import.meta.env.VITE_BLOCKCHAIN_EXPLORER_URL;
+export const VITE_ENABLE_DEFAULT_WALLET = import.meta.env.VITE_ENABLE_DEFAULT_WALLET;
+
+export const DEFAULT_XPUB =
+  "xpub6CDmLSu45NuhjezGYMCF6jSL8BX46xFeLDCqn4dUKcdNMuKJMWtpfj9K12C3MZ9WedceiA4uKz5EXrNrFuHhyxgGnpcJGhJpEMBkRfXz7FL";
+
+export const DEFAULT_SCRIPT_TYPE = ScriptType.P2TR;
 
 export const GAP_LIMIT = 20;
 

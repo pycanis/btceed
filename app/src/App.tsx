@@ -2,6 +2,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Button } from "./components/Button";
 import { Graph } from "./containers/Graph/Graph";
 import { useDatabaseContext } from "./contexts/DatabaseContext";
+import { GraphProvider } from "./contexts/GraphContext/GraphContext";
 
 export const App = () => {
   const { db } = useDatabaseContext();
@@ -22,7 +23,9 @@ export const App = () => {
           await db.clear("wallets");
         }}
       >
-        <Graph />
+        <GraphProvider>
+          <Graph />
+        </GraphProvider>
 
         <div id="popover" />
       </ErrorBoundary>

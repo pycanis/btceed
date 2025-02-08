@@ -4,12 +4,15 @@ import { useErrorBoundary } from "react-error-boundary";
 import useWebSocket, { Options } from "react-use-websocket";
 import { TypeOf } from "zod";
 import {
+  DEFAULT_SCRIPT_TYPE,
+  DEFAULT_XPUB,
   GAP_LIMIT,
   GET_DB_WALLETS,
   GET_HISTORY,
   GET_TRANSACTION,
   SATS_IN_BTC,
   VITE_ELECTRUM_WS_SERVER_URL,
+  VITE_ENABLE_DEFAULT_WALLET,
 } from "../../../constants";
 import { AddressEntry, HistoryItem, Transaction, Wallet } from "../../../types";
 import { electrumResponseSchema } from "../../../validators";
@@ -239,15 +242,23 @@ const reducer = (state: State, action: Action): State => {
   }
 };
 
-export const useAddressEntriesAndTransactions = () => {
+export const useGraphData = () => {
   const { db } = useDatabaseContext();
   const { deriveAddressRange } = useAddressService();
   const { showBoundary } = useErrorBoundary();
 
-  const { data: wallets = [] } = useQuery({
+  const { data = [] } = useQuery({
     queryKey: [GET_DB_WALLETS],
     queryFn: () => db.getAllFromIndex("wallets", "createdAt"),
   });
+
+  const wallets = useMemo(
+    () =>
+      data.length === 0 && VITE_ENABLE_DEFAULT_WALLET === "true"
+        ? [{ xpub: DEFAULT_XPUB, scriptType: DEFAULT_SCRIPT_TYPE }]
+        : data,
+    [data]
+  );
 
   const [state, dispatch] = useReducer(reducer, {
     wallets: [],
@@ -468,6 +479,7 @@ export const useAddressEntriesAndTransactions = () => {
 
   return useMemo(
     () => ({
+      wallets,
       addressEntries: state.addressEntries,
       transactions: state.transactions,
       adjacentAddressEntries,
@@ -478,6 +490,7 @@ export const useAddressEntriesAndTransactions = () => {
       isLoading: !addressesLoaded || !transactionsLoaded,
     }),
     [
+      wallets,
       state,
       addressesLoaded,
       transactionsLoaded,

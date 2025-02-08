@@ -2,14 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useMemo, useState } from "react";
 import { Loader } from "../../components/Loader";
 import { GET_DB_EXCHANGE_RATES, GET_DB_LABELS } from "../../constants";
-import { AddressEntry, Currencies, Transaction } from "../../types";
+import { AddressEntry, Currencies, Transaction, Wallet } from "../../types";
 import { useDatabaseContext } from "../DatabaseContext";
-import { useAddressEntriesAndTransactions } from "./hooks/useAddressEntriesAndTransactions";
+import { useGraphData } from "./hooks/useGraphData";
 
 type GraphContext = {
   hoveredNodeId: string | null;
   setHoveredNodeId: Dispatch<SetStateAction<string | null>>;
-  addressEntriesAndTransactions: {
+  graphData: {
+    wallets: Wallet[];
     addressEntries: Record<string, AddressEntry>;
     adjacentAddressEntries: Record<string, AddressEntry>;
     transactions: Record<string, Transaction>;
@@ -34,7 +35,7 @@ type Props = {
 export const GraphProvider = ({ children }: Props) => {
   const { db } = useDatabaseContext();
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
-  const addressEntriesAndTransactions = useAddressEntriesAndTransactions();
+  const graphData = useGraphData();
   const [isCsvExportLoading, setIsCsvExportLoading] = useState(false);
 
   const { data: labelStoreValues = [] } = useQuery({
@@ -71,19 +72,17 @@ export const GraphProvider = ({ children }: Props) => {
     () => ({
       hoveredNodeId,
       setHoveredNodeId,
-      addressEntriesAndTransactions,
+      graphData,
       labels,
       exchangeRates,
       isCsvExportLoading,
       setIsCsvExportLoading,
     }),
-    [hoveredNodeId, addressEntriesAndTransactions, labels, exchangeRates, isCsvExportLoading]
+    [hoveredNodeId, graphData, labels, exchangeRates, isCsvExportLoading]
   );
 
   return (
-    <GraphContext.Provider value={contextValue}>
-      {addressEntriesAndTransactions.isLoading ? <Loader /> : children}
-    </GraphContext.Provider>
+    <GraphContext.Provider value={contextValue}>{graphData.isLoading ? <Loader /> : children}</GraphContext.Provider>
   );
 };
 

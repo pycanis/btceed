@@ -13,7 +13,7 @@ export const TransactionRow = ({ address, transaction }: Props) => {
   const { formatValue } = useFormatValue();
 
   const {
-    addressEntriesAndTransactions: { calculateTransactionFeeInSats },
+    graphData: { calculateTransactionFeeInSats },
   } = useGraphContext();
 
   const exchangeRates = useExchangeRates(transaction.time);

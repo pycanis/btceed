@@ -7,7 +7,7 @@ export const Notifications = () => {
 
   return (
     <Panel className="w-full m-0">
-      {import.meta.env.VITE_PUBLIC_DISPLAY_PUBLIC_WARNING && (
+      {import.meta.env.VITE_PUBLIC_DISPLAY_PUBLIC_WARNING === "true" && (
         <div className="px-4 py-2 bg-red-800 text-darkText">
           Warning! This instance is using a public electrum server. You should assume it can see your transactions.
           Learn about{" "}

@@ -35,15 +35,13 @@ wss.on("connection", (ws) => {
   tcpSocket.on("data", (data) => {
     buffer += data.toString();
 
-    if (!buffer.includes("\n")) {
-      return;
+    while (buffer.includes("\n")) {
+      const [message, ...rest] = buffer.replace(/\r\n/g, "\n").split("\n");
+
+      buffer = rest.join("\n");
+
+      ws.send(message);
     }
-
-    const [message, rest] = buffer.replace(/\r\n/g, "\n").split("\n", 2);
-
-    buffer = rest;
-
-    ws.send(message);
   });
 
   tcpSocket.on("end", () => {

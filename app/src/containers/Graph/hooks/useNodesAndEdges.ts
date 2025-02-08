@@ -16,7 +16,8 @@ export const useNodesAndEdges = () => {
   const { settings } = useSettingsContext();
 
   const {
-    addressEntriesAndTransactions: {
+    graphData: {
+      wallets,
       transactions,
       addressEntries,
       adjacentAddressEntries,
@@ -223,5 +224,14 @@ export const useNodesAndEdges = () => {
     ]
   );
 
-  return useMemo(() => ({ populateNodesAndEdges }), [populateNodesAndEdges]);
+  return useMemo(() => {
+    const nodes: Record<string, PositionlessNode> = {};
+    const edges: Record<string, Edge> = {};
+
+    for (const wallet of wallets) {
+      populateNodesAndEdges(wallet, nodes, edges);
+    }
+
+    return { nodes, edges };
+  }, [wallets, populateNodesAndEdges]);
 };

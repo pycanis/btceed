@@ -2,7 +2,7 @@ import dagre from "@dagrejs/dagre";
 import { Edge, ReactFlow } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
 import { useSettingsContext } from "../../contexts/SettingsContext";
-import { PositionlessNode, Wallet } from "../../types";
+import { PositionlessNode } from "../../types";
 import { Controls } from "./Controls/Controls";
 import { CustomEdge } from "./Edge";
 import { useNodesAndEdges } from "./hooks/useNodesAndEdges";
@@ -13,13 +13,9 @@ import { Notifications } from "./Notifications";
 
 import "@xyflow/react/dist/style.css";
 
-type Props = {
-  wallets: Wallet[];
-};
-
-export const GraphComponent = ({ wallets }: Props) => {
+export const GraphComponent = () => {
   const { settings } = useSettingsContext();
-  const { populateNodesAndEdges } = useNodesAndEdges();
+  const nodesAndEdges = useNodesAndEdges();
 
   const getLayoutedNodesAndEdges = useCallback(
     (nodes: PositionlessNode[], edges: Edge[]) => {
@@ -61,15 +57,10 @@ export const GraphComponent = ({ wallets }: Props) => {
   );
 
   const { nodes, edges } = useMemo(() => {
-    const allNodes: Record<string, PositionlessNode> = {};
-    const allEdges: Record<string, Edge> = {};
+    const { nodes, edges } = nodesAndEdges;
 
-    for (const wallet of wallets) {
-      populateNodesAndEdges(wallet, allNodes, allEdges);
-    }
-
-    return getLayoutedNodesAndEdges(Object.values(allNodes), Object.values(allEdges));
-  }, [wallets, populateNodesAndEdges, getLayoutedNodesAndEdges]);
+    return getLayoutedNodesAndEdges(Object.values(nodes), Object.values(edges));
+  }, [nodesAndEdges, getLayoutedNodesAndEdges]);
 
   return (
     <ReactFlow
